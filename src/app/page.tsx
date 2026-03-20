@@ -42,8 +42,6 @@ export default async function Home() {
         )}
       </header>
 
-      <div className="w-10 h-px bg-[var(--lighter)] mx-auto mb-12" />
-
       <ul className="pb-20">
         {articles?.map(
           (article: {
