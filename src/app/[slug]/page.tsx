@@ -8,6 +8,7 @@ import {
 } from "@/sanity/lib/queries";
 import { PortableText } from "@portabletext/react";
 import type { PortableTextReactComponents } from "@portabletext/react";
+import LearningCurve from "@/components/LearningCurve";
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return "";
@@ -113,6 +114,7 @@ export default async function ArticlePage({
         {article.body && (
           <PortableText value={article.body} components={components} />
         )}
+        {slug === "conclusion" && <LearningCurve />}
       </div>
 
       <div className="flex justify-between py-10 border-t border-[#f5f5f7] gap-5">
