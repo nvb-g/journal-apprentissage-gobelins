@@ -9,8 +9,10 @@ import {
 import { PortableText } from "@portabletext/react";
 import type { PortableTextReactComponents } from "@portabletext/react";
 
-function formatDate(dateStr: string) {
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return "";
   const date = new Date(dateStr + "T00:00:00");
+  if (isNaN(date.getTime())) return "";
   return date.toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",

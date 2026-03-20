@@ -2,8 +2,10 @@ import Link from "next/link";
 import { client } from "@/sanity/lib/client";
 import { SETTINGS_QUERY, ARTICLES_QUERY } from "@/sanity/lib/queries";
 
-function formatDate(dateStr: string) {
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return "";
   const date = new Date(dateStr + "T00:00:00");
+  if (isNaN(date.getTime())) return "";
   return date.toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",
