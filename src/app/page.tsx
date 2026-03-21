@@ -2,15 +2,15 @@ import Link from "next/link";
 import { client } from "@/sanity/lib/client";
 import { SETTINGS_QUERY, ARTICLES_QUERY } from "@/sanity/lib/queries";
 
-function formatDate(dateStr: string | null) {
+function formatDateShort(dateStr: string | null) {
   if (!dateStr) return "";
   const date = new Date(dateStr + "T00:00:00");
   if (isNaN(date.getTime())) return "";
   return date.toLocaleDateString("fr-FR", {
     day: "numeric",
-    month: "long",
+    month: "short",
     year: "numeric",
-  });
+  }).replace(".", "");
 }
 
 export const revalidate = 60;
@@ -22,58 +22,63 @@ export default async function Home() {
   ]);
 
   return (
-    <div className="max-w-[640px] mx-auto px-6">
-      <header className="py-20 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-[var(--black)] mb-3">
-          {settings?.title || "Journal d'apprentissage sur la typographie"}
+    <div className="max-w-[640px] mx-auto px-6 min-h-screen flex flex-col">
+      <header className="pt-24 pb-16">
+        <h1 className="text-[2.8rem] font-semibold tracking-tight text-[var(--black)] leading-[1.1]">
+          Typo-graphie.
         </h1>
-        <p className="text-sm font-medium text-[var(--light)] leading-relaxed">
-          {settings?.subtitle}
+        <p className="text-[15px] text-[var(--light)] leading-relaxed mt-5 max-w-[480px]">
+          {settings?.subtitle ||
+            "Journal d'apprentissage sur la typographie, réalisé dans le cadre du Mastère ECNI aux Gobelins, 2026. Par Nicolas Giannantonio."}
         </p>
         {settings?.softwareLink && (
           <a
             href={settings.softwareLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block mt-6 px-6 py-2.5 bg-[var(--black)] text-white text-[13px] font-semibold rounded-full hover:bg-[var(--mid)] transition-colors"
+            className="inline-block mt-6 px-5 py-2 bg-[var(--black)] text-white text-[13px] font-medium rounded-full hover:bg-[var(--dark)] active:scale-[0.97] transition-all duration-150"
           >
             {settings?.softwareName || "Cocotte"}
           </a>
         )}
+        <div className="mt-4">
+          <Link
+            href="/sommaire"
+            className="text-[13px] text-[var(--light)] font-medium hover:text-[var(--black)] transition-colors duration-150 underline underline-offset-3"
+          >
+            Table des matières
+          </Link>
+        </div>
       </header>
 
-      <ul className="pb-20">
-        {articles?.map(
-          (article: {
-            _id: string;
-            title: string;
-            slug: string;
-            date: string;
-            excerpt: string;
-          }) => (
-            <li key={article._id} className="mb-0.5">
-              <Link
-                href={`/${article.slug}`}
-                className="block py-5 border-b border-[var(--bg)] hover:opacity-70 transition-opacity"
-              >
-                <div className="text-xs font-medium text-[var(--light)] uppercase tracking-wider mb-1">
-                  {formatDate(article.date)}
-                </div>
-                <div className="text-[17px] font-semibold text-[var(--dark)] tracking-tight">
-                  {article.title}
-                </div>
-                {article.excerpt && (
-                  <div className="text-sm text-[var(--light)] mt-1.5 leading-relaxed line-clamp-2">
-                    {article.excerpt}
-                  </div>
-                )}
-              </Link>
-            </li>
-          )
-        )}
-      </ul>
+      <div className="flex-1">
+        <ol className="pb-20">
+          {articles?.map(
+            (article: {
+              _id: string;
+              title: string;
+              slug: string;
+              date: string;
+            }) => (
+              <li key={article._id}>
+                <Link
+                  href={`/${article.slug}`}
+                  className="group flex items-baseline gap-4 py-3 border-b border-[#f0f0f2] active:scale-[0.995] transition-all duration-150"
+                >
+                  <span className="text-[13px] text-[var(--light)] font-medium tabular-nums shrink-0 w-[100px]">
+                    {formatDateShort(article.date)}
+                  </span>
+                  <span className="text-[15px] font-medium text-[var(--dark)] group-hover:text-[var(--black)] transition-colors duration-150">
+                    {article.title}
+                  </span>
+                </Link>
+              </li>
+            )
+          )}
+        </ol>
+      </div>
 
-      <footer className="text-center py-10 text-xs text-[var(--lighter)] font-medium">
+      <footer className="py-10 text-xs text-[var(--lighter)] font-medium">
         {settings?.footer || "Nicolas Giannantonio — Gobelins 2026"}
       </footer>
     </div>

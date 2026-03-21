@@ -49,7 +49,7 @@ const components: Partial<PortableTextReactComponents> = {
         href={value?.href}
         target="_blank"
         rel="noopener noreferrer"
-        className="underline underline-offset-3 hover:text-[var(--black)] transition-colors"
+        className="underline underline-offset-3 hover:text-[var(--black)] transition-colors duration-150"
       >
         {children}
       </a>
@@ -98,7 +98,7 @@ export default async function ArticlePage({
       <div className="pt-20 pb-10 text-center">
         <Link
           href="/"
-          className="inline-block text-sm text-[var(--light)] font-medium hover:text-[var(--black)] transition-colors mb-8"
+          className="inline-block text-sm text-[var(--light)] font-medium hover:text-[var(--black)] active:scale-[0.97] transition-all duration-150 py-2 px-3 -mx-3 rounded-lg mb-8"
         >
           ← Retour
         </Link>
@@ -117,11 +117,11 @@ export default async function ArticlePage({
         {slug === "conclusion" && <LearningCurve />}
       </div>
 
-      <div className="flex justify-between py-10 border-t border-[#f5f5f7] gap-5">
+      <div className="flex justify-between py-10 border-t border-[#f5f5f7] gap-4">
         {adjacent?.prev ? (
           <Link
             href={`/${adjacent.prev.slug}`}
-            className="text-sm text-[var(--light)] font-medium hover:text-[var(--black)] transition-colors"
+            className="text-sm text-[var(--light)] font-medium hover:text-[var(--black)] active:scale-[0.97] transition-all duration-150 py-2 px-3 -mx-3 rounded-lg min-h-[44px] flex items-center"
           >
             ← {adjacent.prev.title}
           </Link>
@@ -131,7 +131,7 @@ export default async function ArticlePage({
         {adjacent?.next ? (
           <Link
             href={`/${adjacent.next.slug}`}
-            className="text-sm text-[var(--light)] font-medium hover:text-[var(--black)] transition-colors text-right"
+            className="text-sm text-[var(--light)] font-medium hover:text-[var(--black)] active:scale-[0.97] transition-all duration-150 py-2 px-3 -mx-3 rounded-lg text-right min-h-[44px] flex items-center"
           >
             {adjacent.next.title} →
           </Link>

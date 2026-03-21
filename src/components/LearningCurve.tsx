@@ -105,10 +105,10 @@ export default function LearningCurve() {
   const [active, setActive] = useState<number | null>(null);
 
   const width = 900;
-  const height = 340;
+  const height = 300;
   const padX = 40;
-  const padTop = 30;
-  const padBottom = 50;
+  const padTop = 20;
+  const padBottom = 40;
 
   const chartW = width - padX * 2;
   const chartH = height - padTop - padBottom;
@@ -127,20 +127,23 @@ export default function LearningCurve() {
     return `${acc} C ${cpx1} ${prev.cy}, ${cpx2} ${p.cy}, ${p.x} ${p.cy}`;
   }, "");
 
+  const areaD = `${pathD} L ${points[points.length - 1].x} ${padTop + chartH} L ${points[0].x} ${padTop + chartH} Z`;
+
   return (
     <div className="w-full py-16">
       <h3 className="text-lg font-semibold text-[var(--black)] tracking-tight text-center mb-2">
         Courbe d&apos;apprentissage
       </h3>
       <p className="text-sm text-[var(--light)] text-center mb-10">
-        Octobre 2025 &mdash; Mars 2026
+        Octobre 2025 &mdash; 15 mars 2026
       </p>
 
       <div className="w-full overflow-x-auto">
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full min-w-[700px] h-auto"
-          onMouseLeave={() => setActive(null)}
+          className="w-full min-w-[600px] h-auto"
+          role="img"
+          aria-label="Courbe d'apprentissage typographique d'octobre 2025 à mars 2026"
         >
           {/* Grid lines */}
           {[0, 25, 50, 75, 100].map((v) => {
@@ -152,11 +155,18 @@ export default function LearningCurve() {
                 y1={y}
                 x2={width - padX}
                 y2={y}
-                stroke="#e5e5e7"
+                stroke="var(--lighter)"
                 strokeWidth={0.5}
               />
             );
           })}
+
+          {/* Area fill */}
+          <path
+            d={areaD}
+            fill="var(--dark)"
+            opacity={0.04}
+          />
 
           {/* Curve */}
           <path
@@ -167,76 +177,118 @@ export default function LearningCurve() {
             strokeLinecap="round"
           />
 
+          {/* Vertical indicator line for active point */}
+          {active !== null && (
+            <line
+              x1={points[active].x}
+              y1={points[active].cy}
+              x2={points[active].x}
+              y2={padTop + chartH}
+              stroke="var(--dark)"
+              strokeWidth={0.5}
+              strokeDasharray="3 3"
+              opacity={0.4}
+            />
+          )}
+
           {/* Points + hit areas */}
           {points.map((p, i) => (
-            <g key={i}>
-              {/* Invisible hit area */}
+            <g
+              key={i}
+              onClick={() => setActive(active === i ? null : i)}
+              onMouseEnter={() => setActive(i)}
+              className="cursor-pointer"
+              role="button"
+              tabIndex={0}
+              aria-label={`${data[i].title} — ${data[i].date}`}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setActive(active === i ? null : i);
+                }
+              }}
+            >
+              {/* Invisible hit area — generous for touch */}
               <circle
                 cx={p.x}
                 cy={p.cy}
-                r={16}
+                r={22}
                 fill="transparent"
-                className="cursor-pointer"
-                onMouseEnter={() => setActive(i)}
-                onClick={() => setActive(active === i ? null : i)}
               />
+              {/* Outer ring on active */}
+              {active === i && (
+                <circle
+                  cx={p.x}
+                  cy={p.cy}
+                  r={8}
+                  fill="none"
+                  stroke="var(--dark)"
+                  strokeWidth={1}
+                  opacity={0.25}
+                />
+              )}
               {/* Visible dot */}
               <circle
                 cx={p.x}
                 cy={p.cy}
-                r={active === i ? 5 : 3}
+                r={active === i ? 4 : 2.5}
                 fill={active === i ? "var(--black)" : "var(--dark)"}
                 className="transition-all duration-150"
               />
-              {/* Date labels (show every 3rd + first + last) */}
-              {(i === 0 || i === points.length - 1 || i % 3 === 0) && (
-                <text
-                  x={p.x}
-                  y={height - 12}
-                  textAnchor="middle"
-                  className="text-[9px] fill-[var(--light)]"
-                >
-                  {p.date}
-                </text>
-              )}
             </g>
           ))}
 
-          {/* Tooltip */}
-          {active !== null && (() => {
-            const p = points[active];
-            const tooltipW = 260;
-            let tx = p.x - tooltipW / 2;
-            if (tx < 5) tx = 5;
-            if (tx + tooltipW > width - 5) tx = width - tooltipW - 5;
-            const above = p.cy > padTop + 70;
-            const ty = above ? p.cy - 68 : p.cy + 16;
-
+          {/* Date labels — first, last, and every 4th */}
+          {points.map((p, i) => {
+            if (i !== 0 && i !== points.length - 1 && i % 4 !== 0) return null;
             return (
-              <g>
-                <line
-                  x1={p.x}
-                  y1={p.cy + (above ? -8 : 8)}
-                  x2={p.x}
-                  y2={above ? ty + 58 : ty}
-                  stroke="var(--lighter)"
-                  strokeWidth={0.5}
-                />
-                <foreignObject x={tx} y={ty} width={tooltipW} height={58}>
-                  <div className="bg-white border border-[var(--lighter)] rounded-lg px-3 py-2 shadow-sm">
-                    <div className="text-[11px] font-semibold text-[var(--black)] leading-tight">
-                      {data[active].title}
-                    </div>
-                    <div className="text-[10px] text-[var(--light)] leading-tight mt-1">
-                      {data[active].learning}
-                    </div>
-                  </div>
-                </foreignObject>
-              </g>
+              <text
+                key={`label-${i}`}
+                x={p.x}
+                y={height - 8}
+                textAnchor="middle"
+                className="text-[9px] fill-[var(--light)]"
+                style={{ userSelect: "none" }}
+              >
+                {p.date}
+              </text>
             );
-          })()}
+          })}
         </svg>
       </div>
+
+      {/* Detail panel below chart */}
+      <div
+        className="mt-6 mx-auto overflow-hidden transition-all duration-300 ease-out"
+        style={{
+          maxWidth: 560,
+          maxHeight: active !== null ? 120 : 0,
+          opacity: active !== null ? 1 : 0,
+        }}
+      >
+        {active !== null && (
+          <div className="border-t border-[var(--lighter)] pt-4 px-1">
+            <div className="flex items-baseline justify-between gap-4">
+              <p className="text-sm font-semibold text-[var(--black)] leading-snug">
+                {data[active].title}
+              </p>
+              <p className="text-xs text-[var(--light)] whitespace-nowrap shrink-0">
+                {data[active].date}
+              </p>
+            </div>
+            <p className="text-sm text-[var(--mid)] leading-relaxed mt-1">
+              {data[active].learning}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Hint */}
+      {active === null && (
+        <p className="text-xs text-[var(--lighter)] text-center mt-4 transition-opacity duration-300">
+          Cliquez sur un point pour voir le d&eacute;tail
+        </p>
+      )}
     </div>
   );
 }
