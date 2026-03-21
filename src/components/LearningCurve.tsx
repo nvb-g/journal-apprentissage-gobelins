@@ -3,31 +3,22 @@
 import { useState, useEffect } from "react";
 
 const data = [
-  { date: "1 oct. 2025", title: "Introduction", learning: "Choix du sujet, premières intuitions sur l'importance de la typographie", y: 5 },
-  { date: "14 oct. 2025", title: "L'origine de la typographie", learning: "Étymologie, définition, la double nature du mot", y: 12 },
-  { date: "27 oct. 2025", title: "L'imprimerie et la transmission", learning: "De la xylographie chinoise à Gutenberg, la typographie comme véhicule du contenu", y: 22 },
-  { date: "9 nov. 2025", title: "Les premiers typographes", learning: "Jenson, Manuce, Griffo, Tory, la rupture avec le gothique", y: 30 },
-  { date: "22 nov. 2025", title: "Claude Garamont", learning: "Le contexte parisien des années 1530, Vervliet, les Grecs du Roi", y: 38 },
-  { date: "5 déc. 2025", title: "La standardisation", learning: "Moxon, le Romain du Roi, Fournier, Bodoni, la typographie comme enjeu de pouvoir", y: 45 },
-  { date: "18 déc. 2025", title: "La classification typographique", learning: "Vox-ATypI, les onze familles, chaque police porte une histoire", y: 55 },
-  { date: "31 déc. 2025", title: "Le dessin typographique", learning: "Anatomie des lettres, vocabulaire technique, familles typographiques", y: 62 },
-  { date: "12 jan. 2026", title: "La typographie sur internet", learning: "PostScript, TrueType, OpenType, @font-face, Google Fonts, polices variables", y: 70 },
-  { date: "23 jan. 2026", title: "Les fonderies modernes", learning: "Le marché, Monotype, les indépendants, le coût de création d'une police", y: 76 },
-  { date: "3 fév. 2026", title: "Licences typographiques", learning: "Desktop, web, app, les modèles de tarification, la protection juridique", y: 80 },
-  { date: "13 fév. 2026", title: "Cocotte", learning: "Développement du logiciel en parallèle de l'apprentissage", y: 85 },
-  { date: "22 fév. 2026", title: "L'association de polices", learning: "Principes de contraste et de cohérence, erreurs courantes", y: 89 },
-  { date: "1 mars 2026", title: "Typographie et identité de marque", learning: "Polices sur-mesure, IBM Plex, Parisine, le rôle stratégique", y: 93 },
-  { date: "8 mars 2026", title: "OpenType", learning: "Ligatures, petites capitales, chiffres elzéviriens, variantes stylistiques", y: 96 },
-  { date: "15 mars 2026", title: "Conclusion", learning: "Bilan de l'apprentissage, ce que la typographie a changé dans ma manière de voir", y: 100 },
-];
-
-const months = [
-  { label: "Oct.", idx: 0 },
-  { label: "Nov.", idx: 3 },
-  { label: "Déc.", idx: 6 },
-  { label: "Jan.", idx: 8 },
-  { label: "Fév.", idx: 10 },
-  { label: "Mars", idx: 13 },
+  { date: "1 oct.", title: "Introduction", y: 5 },
+  { date: "14 oct.", title: "L'origine de la typographie", y: 12 },
+  { date: "27 oct.", title: "L'imprimerie et la transmission", y: 22 },
+  { date: "9 nov.", title: "Les premiers typographes", y: 30 },
+  { date: "22 nov.", title: "Claude Garamont", y: 38 },
+  { date: "5 déc.", title: "La standardisation", y: 45 },
+  { date: "18 déc.", title: "La classification typographique", y: 55 },
+  { date: "31 déc.", title: "Le dessin typographique", y: 62 },
+  { date: "12 jan.", title: "La typographie sur internet", y: 70 },
+  { date: "23 jan.", title: "Les fonderies modernes", y: 76 },
+  { date: "3 fév.", title: "Licences typographiques", y: 80 },
+  { date: "13 fév.", title: "Cocotte", y: 85 },
+  { date: "22 fév.", title: "L'association de polices", y: 89 },
+  { date: "1 mars", title: "Typographie et identité de marque", y: 93 },
+  { date: "8 mars", title: "OpenType", y: 96 },
+  { date: "15 mars", title: "Conclusion", y: 100 },
 ];
 
 export default function LearningCurve() {
@@ -35,15 +26,15 @@ export default function LearningCurve() {
   const [drawn, setDrawn] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setDrawn(true), 400);
+    const t = setTimeout(() => setDrawn(true), 300);
     return () => clearTimeout(t);
   }, []);
 
-  const w = 960;
-  const h = 420;
-  const mx = 50;
-  const mt = 50;
-  const mb = 50;
+  const w = 680;
+  const h = 280;
+  const mx = 0;
+  const mt = 24;
+  const mb = 24;
   const cw = w - mx * 2;
   const ch = h - mt - mb;
 
@@ -59,8 +50,6 @@ export default function LearningCurve() {
     return `${s} C${cx},${prev.y} ${cx},${p.y} ${p.x},${p.y}`;
   }, "");
 
-  const area = `${curve} L${pts[pts.length - 1].x},${mt + ch} L${pts[0].x},${mt + ch} Z`;
-
   const handleMove = (e: React.MouseEvent<SVGSVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * w;
@@ -74,167 +63,87 @@ export default function LearningCurve() {
   };
 
   return (
-    <div className="w-screen h-screen relative left-1/2 -translate-x-1/2 flex flex-col">
-
-      {/* Header */}
-      <div className="flex items-baseline justify-between px-8 pt-8 pb-2">
-        <div>
-          <h3 className="text-xl font-semibold text-[var(--black)] tracking-tight">
-            Courbe d&apos;apprentissage
-          </h3>
-          <p className="text-[13px] text-[var(--light)] mt-0.5">
-            16 articles, octobre 2025 — mars 2026
-          </p>
-        </div>
-        {active !== null && (
-          <p className="text-[13px] text-[var(--light)] tabular-nums">
-            {String(active + 1).padStart(2, "0")}/{data.length}
-          </p>
-        )}
+    <div className="mt-12 mb-8">
+      <div className="flex items-baseline justify-between mb-6">
+        <p className="text-[13px] text-[var(--light)]">
+          Courbe d&apos;apprentissage
+        </p>
+        <p
+          className="text-[13px] text-[var(--light)] tabular-nums"
+          style={{ opacity: active !== null ? 1 : 0, transition: "opacity 150ms" }}
+        >
+          {active !== null && `${String(active + 1).padStart(2, "0")}/${data.length}`}
+        </p>
       </div>
 
-      {/* Graph */}
-      <div className="flex-1 px-4 min-h-0">
-        <svg
-          viewBox={`0 0 ${w} ${h}`}
-          className="w-full h-full"
-          preserveAspectRatio="xMidYMid meet"
-          onMouseMove={handleMove}
-          onMouseLeave={() => setActive(null)}
-          style={{ cursor: "crosshair" }}
-        >
-          <defs>
-            <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--black)" stopOpacity={0.04} />
-              <stop offset="100%" stopColor="var(--black)" stopOpacity={0} />
-            </linearGradient>
-          </defs>
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        className="w-full h-auto"
+        onMouseMove={handleMove}
+        onMouseLeave={() => setActive(null)}
+        style={{ cursor: "crosshair" }}
+      >
+        {/* Curve */}
+        <path
+          d={curve}
+          fill="none"
+          stroke="var(--dark)"
+          strokeWidth={1.2}
+          strokeLinecap="round"
+          style={{
+            strokeDasharray: 2000,
+            strokeDashoffset: drawn ? 0 : 2000,
+            transition: "stroke-dashoffset 1.8s cubic-bezier(.4,0,.2,1)",
+          }}
+        />
 
-          {/* Light horizontal grid */}
-          {[25, 50, 75].map(v => {
-            const y = mt + ch - (v / 100) * ch;
-            return <line key={v} x1={mx} y1={y} x2={w - mx} y2={y} stroke="var(--lighter)" strokeWidth={0.5} opacity={0.5} />;
-          })}
-
-          {/* Area */}
-          <path
-            d={area} fill="url(#fill)"
-            opacity={drawn ? 1 : 0}
-            style={{ transition: "opacity 1s ease-out" }}
+        {/* Vertical indicator */}
+        {active !== null && (
+          <line
+            x1={pts[active].x}
+            y1={pts[active].y + 6}
+            x2={pts[active].x}
+            y2={mt + ch}
+            stroke="var(--border)"
+            strokeWidth={1}
           />
+        )}
 
-          {/* Curve */}
-          <path
-            d={curve} fill="none" stroke="var(--black)" strokeWidth={1.5} strokeLinecap="round"
-            style={{
-              strokeDasharray: 2500,
-              strokeDashoffset: drawn ? 0 : 2500,
-              transition: "stroke-dashoffset 2s cubic-bezier(.4,0,.2,1)",
-            }}
+        {/* Points */}
+        {pts.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r={active === i ? 4 : 1.8}
+            fill={active === i ? "var(--black)" : "var(--light)"}
+            style={{ transition: "all 150ms ease-out" }}
           />
+        ))}
 
-          {/* Vertical indicator */}
-          {active !== null && (
-            <line
-              x1={pts[active].x} y1={pts[active].y + 6}
-              x2={pts[active].x} y2={mt + ch}
-              stroke="var(--black)" strokeWidth={0.5} opacity={0.1}
-            />
-          )}
-
-          {/* Points */}
-          {pts.map((p, i) => (
-            <circle
-              key={i} cx={p.x} cy={p.y}
-              r={active === i ? 5 : 2.5}
-              fill={active === i ? "var(--black)" : "var(--dark)"}
-              opacity={active === i ? 1 : 0.6}
-              style={{ transition: "all 200ms ease-out" }}
-            />
-          ))}
-
-          {/* Active label on curve */}
-          {active !== null && (() => {
-            const p = pts[active];
-            const above = p.y > mt + 50;
-            const ty = above ? p.y - 30 : p.y + 18;
-            return (
-              <text
-                x={p.x}
-                y={ty}
-                textAnchor="middle"
-                fill="var(--black)"
-                fontSize={12}
-                fontWeight={600}
-                style={{ userSelect: "none", transition: "opacity 150ms ease-out" }}
-              >
-                {data[active].title}
-              </text>
-            );
-          })()}
-
-          {/* Month labels */}
-          {months.map(m => (
+        {/* Label on active point */}
+        {active !== null && (() => {
+          const p = pts[active];
+          const above = p.y > mt + 28;
+          return (
             <text
-              key={m.label}
-              x={pts[m.idx].x} y={h - 12}
+              x={p.x}
+              y={above ? p.y - 14 : p.y + 22}
               textAnchor="middle"
-              fill="var(--light)" fontSize={11} fontWeight={500}
+              fill="var(--dark)"
+              fontSize={11}
+              fontWeight={500}
               style={{ userSelect: "none" }}
             >
-              {m.label}
+              {data[active].title}
             </text>
-          ))}
+          );
+        })()}
+      </svg>
 
-          {/* Baseline */}
-          <line x1={mx} y1={mt + ch} x2={w - mx} y2={mt + ch} stroke="var(--lighter)" strokeWidth={0.5} />
-        </svg>
-      </div>
-
-      {/* Bottom detail card */}
-      <div className="px-8 pb-8">
-        <div
-          className="max-w-[700px] mx-auto rounded-xl overflow-hidden"
-          style={{
-            transition: "all 300ms ease-out",
-            backgroundColor: active !== null ? "#f5f5f7" : "transparent",
-            padding: active !== null ? "20px 24px" : "20px 24px",
-            opacity: active !== null ? 1 : 0,
-            transform: active !== null ? "translateY(0)" : "translateY(8px)",
-          }}
-        >
-          {active !== null && (
-            <div className="flex items-start gap-5">
-              {/* Number */}
-              <span className="text-3xl font-semibold text-[var(--lighter)] tabular-nums leading-none mt-0.5">
-                {String(active + 1).padStart(2, "0")}
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline justify-between gap-4">
-                  <p className="text-[15px] font-semibold text-[var(--black)] leading-snug">
-                    {data[active].title}
-                  </p>
-                  <p className="text-xs text-[var(--light)] tabular-nums shrink-0">
-                    {data[active].date}
-                  </p>
-                </div>
-                <p className="text-[13px] text-[var(--mid)] leading-relaxed mt-1.5">
-                  {data[active].learning}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Hint when nothing is hovered */}
-        {active === null && (
-          <p
-            className="text-center text-xs text-[var(--lighter)] mt-2"
-            style={{ transition: "opacity 300ms ease-out" }}
-          >
-            Survolez la courbe pour explorer les articles
-          </p>
-        )}
+      <div className="flex justify-between mt-2">
+        <span className="text-[10px] text-[var(--lighter)]">Oct. 2025</span>
+        <span className="text-[10px] text-[var(--lighter)]">Mars 2026</span>
       </div>
     </div>
   );

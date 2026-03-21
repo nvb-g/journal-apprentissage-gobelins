@@ -27,32 +27,28 @@ export default async function Home() {
     <div className="max-w-[680px] mx-auto px-6 min-h-[100dvh] flex flex-col">
       {/* ── HEADER ── */}
       <header className="pt-32 pb-20 md:pt-40 md:pb-24">
-        <h1 className="text-4xl md:text-5xl font-semibold text-[var(--black)] leading-[1.05]">
-          Typo-graphie.
+        <h1 className="text-[1.6rem] font-semibold text-[var(--black)] leading-tight">
+          Journal d&apos;apprentissage sur la typographie
         </h1>
-        <p className="text-[15px] text-[var(--light)] leading-[1.65] mt-6 max-w-[520px]">
+        <p className="text-[14px] text-[var(--light)] leading-relaxed mt-3 max-w-[440px]">
           {settings?.subtitle ||
-            "Journal d'apprentissage sur la typographie, r\u00e9alis\u00e9 dans le cadre du Mast\u00e8re ECNI aux Gobelins, 2026. Par Nicolas Giannantonio."}
+            "R\u00e9alis\u00e9 dans le cadre du Mast\u00e8re ECNI aux Gobelins, 2026. Par Nicolas Giannantonio."}
         </p>
 
-        <div className="flex items-center gap-5 mt-8">
+        <div className="flex items-center gap-4 mt-5">
           {settings?.softwareLink && (
             <a
               href={settings.softwareLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--black)] text-white text-[13px] font-medium rounded-md active:scale-[0.98] transition-transform duration-150 hover:bg-[var(--dark)]"
-              style={{
-                transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)",
-              }}
+              className="text-[13px] text-[var(--dark)] font-medium underline underline-offset-[3px] decoration-[var(--border)] hover:text-[var(--black)] hover:decoration-[var(--dark)] transition-colors duration-200"
             >
-              {settings?.softwareName || "Cocotte"}
-              <span className="opacity-40 text-[11px]">&nearr;</span>
+              {settings?.softwareName || "Cocotte"} &#8599;
             </a>
           )}
           <Link
             href="/sommaire"
-            className="text-[13px] text-[var(--light)] font-medium hover:text-[var(--black)] transition-colors duration-200 underline underline-offset-[3px] decoration-[var(--border)]"
+            className="text-[13px] text-[var(--light)] font-medium hover:text-[var(--black)] transition-colors duration-200"
           >
             Sommaire
           </Link>
