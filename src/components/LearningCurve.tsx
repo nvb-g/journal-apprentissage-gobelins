@@ -35,11 +35,11 @@ export default function LearningCurve() {
     return () => clearTimeout(t);
   }, []);
 
-  const w = 960;
-  const h = 480;
-  const px = 60;
+  const w = 1100;
+  const h = 520;
+  const px = 70;
   const pt = 60;
-  const pb = 60;
+  const pb = 65;
   const chartW = w - px * 2;
   const chartH = h - pt - pb;
 
@@ -83,7 +83,7 @@ export default function LearningCurve() {
   };
 
   return (
-    <div className="w-full py-16 -mx-6 px-6 sm:-mx-12 sm:px-12 lg:-mx-20 lg:px-20">
+    <div className="w-full py-16">
       <h3 className="text-2xl font-semibold text-[var(--black)] tracking-tight text-center mb-1">
         Courbe d&apos;apprentissage
       </h3>
