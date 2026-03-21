@@ -2,17 +2,19 @@
 
 :root {
   --black: #1d1d1f;
-  --dark: #333336;
+  --dark: #2f3437;
   --mid: #6e6e73;
-  --light: #86868b;
+  --light: #787774;
   --lighter: #d2d2d7;
-  --bg: #fbfbfd;
+  --border: #eaeaea;
+  --surface: #f9f9f8;
+  --bg: #fbfbfa;
 }
 
 body {
   background: var(--bg);
   color: var(--dark);
-  font-family: "SF Pro Rounded", "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, "Helvetica Neue", sans-serif;
+  font-family: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, "Helvetica Neue", sans-serif;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -26,4 +28,5 @@ body {
 
 h1, h2, h3, h4 {
   text-wrap: balance;
+  letter-spacing: -0.025em;
 }

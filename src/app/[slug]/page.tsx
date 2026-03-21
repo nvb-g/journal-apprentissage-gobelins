@@ -24,17 +24,17 @@ function formatDate(dateStr: string | null) {
 const components: Partial<PortableTextReactComponents> = {
   block: {
     normal: ({ children }) => (
-      <p className="mb-5 text-base font-normal text-[var(--dark)] leading-[1.7]">
+      <p className="mb-6 text-[16px] text-[var(--dark)] leading-[1.75] max-w-[65ch]">
         {children}
       </p>
     ),
     h3: ({ children }) => (
-      <h3 className="text-lg font-semibold text-[var(--black)] mt-8 mb-3 tracking-tight">
+      <h3 className="text-[19px] font-semibold text-[var(--black)] mt-10 mb-4">
         {children}
       </h3>
     ),
     blockquote: ({ children }) => (
-      <blockquote className="my-8 italic text-[var(--mid)] text-lg leading-relaxed text-center">
+      <blockquote className="my-10 pl-5 border-l-2 border-[var(--border)] italic text-[var(--mid)] text-[17px] leading-[1.7]">
         {children}
       </blockquote>
     ),
@@ -49,7 +49,7 @@ const components: Partial<PortableTextReactComponents> = {
         href={value?.href}
         target="_blank"
         rel="noopener noreferrer"
-        className="underline underline-offset-3 hover:text-[var(--black)] transition-colors duration-150"
+        className="underline underline-offset-[3px] decoration-[var(--border)] hover:decoration-[var(--dark)] hover:text-[var(--black)] transition-colors duration-200"
       >
         {children}
       </a>
@@ -57,18 +57,22 @@ const components: Partial<PortableTextReactComponents> = {
   },
   list: {
     bullet: ({ children }) => (
-      <ul className="list-disc pl-6 mb-5 space-y-2">{children}</ul>
+      <ul className="list-disc pl-6 mb-6 space-y-2">{children}</ul>
     ),
     number: ({ children }) => (
-      <ol className="list-decimal pl-6 mb-5 space-y-2">{children}</ol>
+      <ol className="list-decimal pl-6 mb-6 space-y-2">{children}</ol>
     ),
   },
   listItem: {
     bullet: ({ children }) => (
-      <li className="text-base text-[var(--dark)] leading-[1.7]">{children}</li>
+      <li className="text-[16px] text-[var(--dark)] leading-[1.75]">
+        {children}
+      </li>
     ),
     number: ({ children }) => (
-      <li className="text-base text-[var(--dark)] leading-[1.7]">{children}</li>
+      <li className="text-[16px] text-[var(--dark)] leading-[1.75]">
+        {children}
+      </li>
     ),
   },
 };
@@ -94,37 +98,52 @@ export default async function ArticlePage({
   });
 
   return (
-    <div className="max-w-[640px] mx-auto px-6">
-      <div className="pt-20 pb-10 text-center">
+    <div className="max-w-[680px] mx-auto px-6">
+      {/* ── HEADER ── */}
+      <div className="pt-32 pb-12 md:pt-40 md:pb-16">
         <Link
           href="/"
-          className="inline-block text-sm text-[var(--light)] font-medium hover:text-[var(--black)] active:scale-[0.97] transition-all duration-150 py-2 px-3 -mx-3 rounded-lg mb-8"
+          className="inline-block text-[13px] text-[var(--light)] font-medium hover:text-[var(--black)] transition-colors duration-200 mb-12"
         >
-          ← Retour
+          &larr; Retour
         </Link>
-        <h1 className="text-[1.65rem] font-semibold text-[var(--black)] tracking-tight leading-tight mb-3">
+
+        <div className="flex items-baseline gap-4 mb-4">
+          <span className="text-[11px] text-[var(--lighter)] font-semibold tabular-nums">
+            {String(article.order).padStart(2, "0")}
+          </span>
+          <span className="text-[13px] text-[var(--light)] font-medium">
+            {formatDate(article.date)}
+          </span>
+        </div>
+
+        <h1 className="text-3xl md:text-[2.5rem] font-semibold text-[var(--black)] leading-[1.1]">
           {article.title}
         </h1>
-        <div className="text-[13px] text-[var(--light)] font-medium">
-          {formatDate(article.date)}
-        </div>
       </div>
 
-      <div className="pb-24">
+      {/* ── BODY ── */}
+      <article className="pb-20">
         {article.body && (
           <PortableText value={article.body} components={components} />
         )}
-      </div>
+      </article>
 
       {slug === "conclusion" && <LearningCurve />}
 
-      <div className="flex justify-between py-10 border-t border-[#f5f5f7] gap-4">
+      {/* ── NAV ── */}
+      <nav className="flex justify-between py-10 border-t border-[var(--border)] gap-6">
         {adjacent?.prev ? (
           <Link
             href={`/${adjacent.prev.slug}`}
-            className="text-sm text-[var(--light)] font-medium hover:text-[var(--black)] active:scale-[0.97] transition-all duration-150 py-2 px-3 -mx-3 rounded-lg min-h-[44px] flex items-center"
+            className="group flex flex-col gap-1 min-h-[44px] justify-center"
           >
-            ← {adjacent.prev.title}
+            <span className="text-[11px] text-[var(--lighter)] font-medium">
+              Pr&eacute;c&eacute;dent
+            </span>
+            <span className="text-[14px] text-[var(--light)] font-medium group-hover:text-[var(--black)] transition-colors duration-200">
+              {adjacent.prev.title}
+            </span>
           </Link>
         ) : (
           <span />
@@ -132,17 +151,25 @@ export default async function ArticlePage({
         {adjacent?.next ? (
           <Link
             href={`/${adjacent.next.slug}`}
-            className="text-sm text-[var(--light)] font-medium hover:text-[var(--black)] active:scale-[0.97] transition-all duration-150 py-2 px-3 -mx-3 rounded-lg text-right min-h-[44px] flex items-center"
+            className="group flex flex-col gap-1 text-right min-h-[44px] justify-center"
           >
-            {adjacent.next.title} →
+            <span className="text-[11px] text-[var(--lighter)] font-medium">
+              Suivant
+            </span>
+            <span className="text-[14px] text-[var(--light)] font-medium group-hover:text-[var(--black)] transition-colors duration-200">
+              {adjacent.next.title}
+            </span>
           </Link>
         ) : (
           <span />
         )}
-      </div>
+      </nav>
 
-      <footer className="text-center py-10 text-xs text-[var(--lighter)] font-medium">
-        Nicolas Giannantonio — Gobelins 2026
+      {/* ── FOOTER ── */}
+      <footer className="py-10 border-t border-[var(--border)]">
+        <p className="text-[11px] text-[var(--lighter)] font-medium">
+          Nicolas Giannantonio &mdash; Gobelins 2026
+        </p>
       </footer>
     </div>
   );
