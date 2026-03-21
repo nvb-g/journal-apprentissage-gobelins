@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const data = [
   { date: "1 oct.", title: "Introduction", learning: "Choix du sujet, premières intuitions sur l'importance de la typographie", y: 5 },
@@ -21,137 +21,154 @@ const data = [
   { date: "15 mars", title: "Conclusion", learning: "Bilan de l'apprentissage, ce que la typographie a changé dans ma manière de voir", y: 100 },
 ];
 
-/* Typographic glyphs scattered along the curve */
 const glyphs = ["A", "g", "R", "fi", "&", "Q", "e", "Aa", "Rg", "T", "Hx", "Gg", "ff", "Kt", "Oo", "§"];
 
 export default function LearningCurve() {
   const [active, setActive] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 100);
+    const t = setTimeout(() => setMounted(true), 200);
     return () => clearTimeout(t);
   }, []);
 
-  const w = 1100;
-  const h = 520;
-  const px = 70;
-  const pt = 60;
-  const pb = 65;
-  const chartW = w - px * 2;
-  const chartH = h - pt - pb;
+  // Layout: full viewport, graph takes ~65% height, list takes ~35%
+  const graphRatio = 0.62;
+
+  // SVG dimensions (aspect ratio, actual size is CSS-driven)
+  const vw = 1600;
+  const vh = 700;
+  const mx = 100; // margin x
+  const mt = 80;  // margin top
+  const mb = 70;  // margin bottom
+  const cw = vw - mx * 2;
+  const ch = vh - mt - mb;
 
   const points = data.map((d, i) => ({
     ...d,
-    x: px + (i / (data.length - 1)) * chartW,
-    cy: pt + chartH - (d.y / 100) * chartH,
+    x: mx + (i / (data.length - 1)) * cw,
+    cy: mt + ch - (d.y / 100) * ch,
     idx: i,
   }));
 
   const pathD = points.reduce((acc, p, i) => {
     if (i === 0) return `M ${p.x} ${p.cy}`;
     const prev = points[i - 1];
-    const cpx1 = prev.x + (p.x - prev.x) * 0.5;
-    const cpx2 = prev.x + (p.x - prev.x) * 0.5;
-    return `${acc} C ${cpx1} ${prev.cy}, ${cpx2} ${p.cy}, ${p.x} ${p.cy}`;
+    const cx1 = prev.x + (p.x - prev.x) * 0.5;
+    const cx2 = prev.x + (p.x - prev.x) * 0.5;
+    return `${acc} C ${cx1} ${prev.cy}, ${cx2} ${p.cy}, ${p.x} ${p.cy}`;
   }, "");
 
-  const areaD = `${pathD} L ${points[points.length - 1].x} ${pt + chartH} L ${points[0].x} ${pt + chartH} Z`;
+  const areaD = `${pathD} L ${points[points.length - 1].x} ${mt + ch} L ${points[0].x} ${mt + ch} Z`;
 
-  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!svgRef.current) return;
-    const rect = svgRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * w;
-    const y = ((e.clientY - rect.top) / rect.height) * h;
-    setMousePos({ x, y });
+  const handleSvgMove = (e: React.MouseEvent<SVGSVGElement> | React.TouchEvent<SVGSVGElement>) => {
+    const svg = e.currentTarget;
+    const rect = svg.getBoundingClientRect();
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const x = ((clientX - rect.left) / rect.width) * vw;
 
-    // Find nearest point
     let nearest = 0;
     let minDist = Infinity;
     points.forEach((p, i) => {
       const dist = Math.abs(p.x - x);
-      if (dist < minDist) {
-        minDist = dist;
-        nearest = i;
-      }
+      if (dist < minDist) { minDist = dist; nearest = i; }
     });
-    if (minDist < chartW / data.length) {
-      setActive(nearest);
-    }
+    setActive(nearest);
   };
 
   return (
-    <div className="w-full py-16">
-      <h3 className="text-2xl font-semibold text-[var(--black)] tracking-tight text-center mb-1">
-        Courbe d&apos;apprentissage
-      </h3>
-      <p className="text-sm text-[var(--light)] text-center mb-8">
-        16 articles &middot; Octobre 2025 &mdash; Mars 2026
-      </p>
+    <div
+      ref={containerRef}
+      className="w-screen h-screen flex flex-col relative left-1/2 -translate-x-1/2 overflow-hidden"
+      style={{ background: "var(--bg)" }}
+    >
+      {/* ─── TOP: GRAPH ─── */}
+      <div
+        className="relative flex-none"
+        style={{ height: `${graphRatio * 100}%` }}
+      >
+        {/* Title overlay — top left */}
+        <div className="absolute top-6 left-8 z-10">
+          <h3 className="text-xl font-semibold text-[var(--black)] tracking-tight leading-none">
+            Courbe d&apos;apprentissage
+          </h3>
+          <p className="text-xs text-[var(--light)] mt-1.5">
+            16 articles &middot; Oct. 2025 &mdash; Mars 2026
+          </p>
+        </div>
 
-      {/* SVG Graph */}
-      <div className="w-full overflow-hidden rounded-xl bg-white border border-[#f0f0f2]">
+        {/* Active detail overlay — top right */}
+        <div
+          className="absolute top-6 right-8 z-10 text-right"
+          style={{
+            transition: "opacity 200ms ease-out",
+            opacity: active !== null ? 1 : 0,
+          }}
+        >
+          {active !== null && (
+            <>
+              <p className="text-xs text-[var(--light)] tabular-nums">{data[active].date}</p>
+              <p className="text-base font-semibold text-[var(--black)] mt-0.5 leading-tight max-w-[300px] ml-auto">
+                {data[active].title}
+              </p>
+              <p className="text-xs text-[var(--mid)] mt-1 max-w-[340px] ml-auto leading-relaxed">
+                {data[active].learning}
+              </p>
+            </>
+          )}
+        </div>
+
+        {/* SVG fills the graph area */}
         <svg
-          ref={svgRef}
-          viewBox={`0 0 ${w} ${h}`}
-          className="w-full h-auto"
-          onMouseMove={handleMouseMove}
+          viewBox={`0 0 ${vw} ${vh}`}
+          className="absolute inset-0 w-full h-full"
+          preserveAspectRatio="none"
+          onMouseMove={handleSvgMove}
+          onTouchMove={handleSvgMove}
           onMouseLeave={() => setActive(null)}
           style={{ cursor: "crosshair" }}
         >
           <defs>
-            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--black)" stopOpacity={0.06} />
+            <linearGradient id="aFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--black)" stopOpacity={0.05} />
               <stop offset="100%" stopColor="var(--black)" stopOpacity={0} />
             </linearGradient>
-            <linearGradient id="curveGrad" x1="0" y1="0" x2="1" y2="0">
+            <linearGradient id="cStroke" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="var(--lighter)" />
-              <stop offset="40%" stopColor="var(--dark)" />
+              <stop offset="30%" stopColor="var(--mid)" />
               <stop offset="100%" stopColor="var(--black)" />
             </linearGradient>
           </defs>
 
-          {/* Subtle grid */}
+          {/* Grid */}
           {[0, 25, 50, 75, 100].map((v) => {
-            const y = pt + chartH - (v / 100) * chartH;
-            return (
-              <line
-                key={v}
-                x1={px}
-                y1={y}
-                x2={w - px}
-                y2={y}
-                stroke="var(--lighter)"
-                strokeWidth={0.5}
-                opacity={0.5}
-              />
-            );
+            const y = mt + ch - (v / 100) * ch;
+            return <line key={v} x1={mx} y1={y} x2={vw - mx} y2={y} stroke="var(--lighter)" strokeWidth={0.5} opacity={0.4} />;
           })}
 
-          {/* Floating typographic glyphs — generative scatter */}
+          {/* Floating serif glyphs */}
           {points.map((p, i) => {
-            const offsetX = (i % 3 === 0 ? -1 : 1) * (12 + (i * 7) % 20);
-            const offsetY = (i % 2 === 0 ? -1 : 1) * (15 + (i * 11) % 25);
-            const opacity = mounted ? (active === i ? 0.25 : 0.06) : 0;
-            const size = 11 + (i * 3) % 8;
+            const ox = (i % 3 === 0 ? -1 : 1) * (15 + (i * 7) % 30);
+            const oy = (i % 2 === 0 ? -1 : 1) * (20 + (i * 11) % 35);
+            const size = 14 + (i * 3) % 12;
             return (
               <text
-                key={`glyph-${i}`}
-                x={p.x + offsetX}
-                y={p.cy + offsetY}
+                key={`g${i}`}
+                x={p.x + ox}
+                y={p.cy + oy}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="var(--dark)"
                 fontSize={size}
-                fontWeight={500}
+                fontWeight={400}
                 fontStyle={i % 3 === 0 ? "italic" : "normal"}
-                opacity={opacity}
+                opacity={mounted ? (active === i ? 0.3 : 0.04) : 0}
                 style={{
                   transition: "opacity 400ms ease-out",
-                  userSelect: "none",
                   fontFamily: "Georgia, 'Times New Roman', serif",
+                  userSelect: "none",
+                  pointerEvents: "none",
                 }}
               >
                 {glyphs[i]}
@@ -159,131 +176,50 @@ export default function LearningCurve() {
             );
           })}
 
-          {/* Area fill */}
-          <path
-            d={areaD}
-            fill="url(#areaGrad)"
-            style={{
-              transition: "opacity 600ms ease-out",
-              opacity: mounted ? 1 : 0,
-            }}
-          />
+          {/* Area */}
+          <path d={areaD} fill="url(#aFill)" opacity={mounted ? 1 : 0} style={{ transition: "opacity 800ms ease-out" }} />
 
-          {/* Main curve */}
+          {/* Curve */}
           <path
             d={pathD}
             fill="none"
-            stroke="url(#curveGrad)"
-            strokeWidth={2}
+            stroke="url(#cStroke)"
+            strokeWidth={2.5}
             strokeLinecap="round"
             style={{
-              strokeDasharray: mounted ? "none" : 2000,
-              strokeDashoffset: mounted ? 0 : 2000,
-              transition: "stroke-dashoffset 1.5s ease-out",
+              strokeDasharray: 3000,
+              strokeDashoffset: mounted ? 0 : 3000,
+              transition: "stroke-dashoffset 2s ease-out",
             }}
           />
 
-          {/* Vertical scan line following cursor */}
+          {/* Crosshair lines */}
           {active !== null && (
-            <line
-              x1={points[active].x}
-              y1={pt}
-              x2={points[active].x}
-              y2={pt + chartH}
-              stroke="var(--black)"
-              strokeWidth={0.5}
-              opacity={0.12}
-            />
+            <>
+              <line x1={points[active].x} y1={mt} x2={points[active].x} y2={mt + ch} stroke="var(--black)" strokeWidth={0.5} opacity={0.1} />
+              <line x1={mx} y1={points[active].cy} x2={points[active].x} y2={points[active].cy} stroke="var(--black)" strokeWidth={0.5} opacity={0.08} strokeDasharray="6 4" />
+            </>
           )}
 
-          {/* Horizontal scan line */}
-          {active !== null && (
-            <line
-              x1={px}
-              y1={points[active].cy}
-              x2={points[active].x}
-              y2={points[active].cy}
-              stroke="var(--black)"
-              strokeWidth={0.5}
-              opacity={0.12}
-              strokeDasharray="4 4"
-            />
-          )}
+          {/* Dots */}
+          {points.map((p, i) => (
+            <g key={i}>
+              {active === i && <circle cx={p.x} cy={p.cy} r={14} fill="var(--black)" opacity={0.06} />}
+              <circle
+                cx={p.x}
+                cy={p.cy}
+                r={active === i ? 5 : 2.5}
+                fill={active === i ? "var(--black)" : "var(--dark)"}
+                style={{ transition: "r 150ms ease-out" }}
+              />
+            </g>
+          ))}
 
-          {/* Points */}
-          {points.map((p, i) => {
-            const isActive = active === i;
-            return (
-              <g key={i}>
-                <circle
-                  cx={p.x}
-                  cy={p.cy}
-                  r={isActive ? 6 : 3}
-                  fill={isActive ? "var(--black)" : "var(--dark)"}
-                  style={{
-                    transition: "r 200ms ease-out, fill 200ms ease-out",
-                  }}
-                />
-                {isActive && (
-                  <circle
-                    cx={p.x}
-                    cy={p.cy}
-                    r={12}
-                    fill="none"
-                    stroke="var(--black)"
-                    strokeWidth={1}
-                    opacity={0.15}
-                  />
-                )}
-              </g>
-            );
-          })}
-
-          {/* Active point label */}
-          {active !== null && (() => {
-            const p = points[active];
-            const labelW = 240;
-            let lx = p.x - labelW / 2;
-            if (lx < px) lx = px;
-            if (lx + labelW > w - px) lx = w - px - labelW;
-            const above = p.cy > pt + 80;
-            const ly = above ? p.cy - 52 : p.cy + 20;
-
-            return (
-              <foreignObject x={lx} y={ly} width={labelW} height={48}>
-                <div
-                  style={{
-                    background: "var(--black)",
-                    color: "white",
-                    borderRadius: 8,
-                    padding: "8px 12px",
-                    fontSize: 12,
-                    fontWeight: 500,
-                    lineHeight: 1.4,
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-                  }}
-                >
-                  <span style={{ opacity: 0.5, marginRight: 6 }}>{p.date}</span>
-                  {p.title}
-                </div>
-              </foreignObject>
-            );
-          })()}
-
-          {/* Axis labels */}
+          {/* X axis dates */}
           {points.map((p, i) => {
             if (i !== 0 && i !== points.length - 1 && i % 3 !== 0) return null;
             return (
-              <text
-                key={`ax-${i}`}
-                x={p.x}
-                y={h - 20}
-                textAnchor="middle"
-                fill="var(--light)"
-                fontSize={10}
-                fontWeight={500}
-                style={{ userSelect: "none" }}
-              >
+              <text key={`d${i}`} x={p.x} y={vh - 20} textAnchor="middle" fill="var(--light)" fontSize={13} fontWeight={500} style={{ userSelect: "none" }}>
                 {p.date}
               </text>
             );
@@ -291,90 +227,59 @@ export default function LearningCurve() {
         </svg>
       </div>
 
-      {/* Detail list below */}
-      <div className="mt-8 space-y-0">
-        {data.map((item, i) => {
-          const isActive = active === i;
-          return (
-            <button
-              key={i}
-              onClick={() => setActive(isActive ? null : i)}
-              onMouseEnter={() => setActive(i)}
-              onMouseLeave={() => setActive(null)}
-              className="w-full text-left"
-              style={{ minHeight: 40 }}
-            >
-              <div
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg"
-                style={{
-                  transitionProperty: "background-color, transform",
-                  transitionDuration: "200ms",
-                  transitionTimingFunction: "ease-out",
-                  backgroundColor: isActive ? "#f5f5f7" : "transparent",
-                  transform: isActive ? "scale(1)" : "scale(1)",
-                }}
-              >
-                <span
-                  className="text-[11px] font-semibold tabular-nums shrink-0 w-5 text-right"
+      {/* ─── BOTTOM: SCROLLABLE LIST ─── */}
+      <div
+        className="flex-1 overflow-y-auto border-t border-[#ebebed]"
+        style={{ minHeight: 0 }}
+      >
+        <div className="max-w-[900px] mx-auto px-6 py-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0">
+            {data.map((item, i) => {
+              const isActive = active === i;
+              return (
+                <button
+                  key={i}
+                  onMouseEnter={() => setActive(i)}
+                  onMouseLeave={() => setActive(null)}
+                  onClick={() => setActive(isActive ? null : i)}
+                  className="w-full text-left flex items-center gap-2.5 py-2 px-2 rounded-md"
                   style={{
-                    transition: "color 200ms ease-out",
-                    color: isActive ? "var(--black)" : "var(--lighter)",
+                    minHeight: 36,
+                    transition: "background-color 150ms ease-out",
+                    backgroundColor: isActive ? "#f0f0f2" : "transparent",
                   }}
                 >
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-
-                {/* Mini progress dot */}
-                <div className="relative w-2 h-2 shrink-0">
-                  <div
-                    className="absolute inset-0 rounded-full"
+                  <span
+                    className="text-[10px] font-semibold tabular-nums w-4 text-right shrink-0"
+                    style={{ color: isActive ? "var(--black)" : "var(--lighter)", transition: "color 150ms ease-out" }}
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span
+                    className="w-1.5 h-1.5 rounded-full shrink-0"
                     style={{
-                      transition: "all 200ms ease-out",
                       backgroundColor: isActive ? "var(--black)" : "var(--lighter)",
-                      transform: isActive ? "scale(1.5)" : "scale(1)",
+                      transform: isActive ? "scale(1.6)" : "scale(1)",
+                      transition: "all 150ms ease-out",
                     }}
                   />
-                </div>
-
-                <span
-                  className="text-[13px] font-medium flex-1 truncate"
-                  style={{
-                    transition: "color 200ms ease-out",
-                    color: isActive ? "var(--black)" : "var(--mid)",
-                  }}
-                >
-                  {item.title}
-                </span>
-
-                <span
-                  className="text-[11px] tabular-nums shrink-0 hidden sm:block"
-                  style={{
-                    transition: "color 200ms ease-out",
-                    color: isActive ? "var(--dark)" : "var(--lighter)",
-                  }}
-                >
-                  {item.date}
-                </span>
-              </div>
-
-              {/* Expanded detail */}
-              <div
-                className="overflow-hidden"
-                style={{
-                  transitionProperty: "max-height, opacity",
-                  transitionDuration: "250ms",
-                  transitionTimingFunction: "ease-out",
-                  maxHeight: isActive ? 50 : 0,
-                  opacity: isActive ? 1 : 0,
-                }}
-              >
-                <p className="text-[12px] text-[var(--light)] leading-relaxed pl-[52px] pr-4 pb-2">
-                  {item.learning}
-                </p>
-              </div>
-            </button>
-          );
-        })}
+                  <span
+                    className="text-[12px] font-medium truncate flex-1"
+                    style={{ color: isActive ? "var(--black)" : "var(--mid)", transition: "color 150ms ease-out" }}
+                  >
+                    {item.title}
+                  </span>
+                  <span
+                    className="text-[10px] tabular-nums shrink-0"
+                    style={{ color: isActive ? "var(--dark)" : "var(--lighter)", transition: "color 150ms ease-out" }}
+                  >
+                    {item.date}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

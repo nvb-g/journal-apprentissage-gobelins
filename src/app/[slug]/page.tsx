@@ -116,13 +116,7 @@ export default async function ArticlePage({
         )}
       </div>
 
-      {slug === "conclusion" && (
-        <div className="w-screen relative left-1/2 -translate-x-1/2 max-w-[1100px] px-6">
-          <LearningCurve />
-        </div>
-      )}
-
-      <div className="pb-24"></div>
+      {slug === "conclusion" && <LearningCurve />}
 
       <div className="flex justify-between py-10 border-t border-[#f5f5f7] gap-4">
         {adjacent?.prev ? (
