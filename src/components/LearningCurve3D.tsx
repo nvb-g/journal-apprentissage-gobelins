@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useMemo, useCallback, useEffect } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls, Text, Html } from "@react-three/drei";
 import {
   EffectComposer,
   Bloom,
@@ -32,7 +32,7 @@ const articles = [
 
 const N = articles.length;
 const HELIX_REVS = 2.2;
-const HELIX_R = 2.8;
+const HELIX_R = 2.6;
 const HELIX_H = 7;
 
 function helixPt(t: number): THREE.Vector3 {
@@ -42,20 +42,20 @@ function helixPt(t: number): THREE.Vector3 {
 
 /* ──────────── PARTICLES ──────────── */
 
-function Particles({ count = 3000 }) {
+function Particles({ count = 2000 }) {
   const ref = useRef<THREE.Points>(null);
   const positions = useMemo(() => {
     const a = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      a[i * 3] = (Math.random() - 0.5) * 24;
+      a[i * 3] = (Math.random() - 0.5) * 20;
       a[i * 3 + 1] = Math.random() * 10;
-      a[i * 3 + 2] = (Math.random() - 0.5) * 24;
+      a[i * 3 + 2] = (Math.random() - 0.5) * 20;
     }
     return a;
   }, [count]);
 
   useFrame(({ clock }) => {
-    if (ref.current) ref.current.rotation.y = clock.getElapsedTime() * 0.008;
+    if (ref.current) ref.current.rotation.y = clock.getElapsedTime() * 0.006;
   });
 
   return (
@@ -63,70 +63,140 @@ function Particles({ count = 3000 }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.012} color="#999" transparent opacity={0.25} sizeAttenuation />
+      <pointsMaterial size={0.01} color="#aaa" transparent opacity={0.2} sizeAttenuation />
     </points>
   );
 }
 
-/* ──────────── HELIX ──────────── */
+/* ──────────── HELIX TUBE ──────────── */
 
 function Helix() {
   const geom = useMemo(() => {
     const pts: THREE.Vector3[] = [];
     for (let i = 0; i <= 400; i++) pts.push(helixPt(i / 400));
     const c = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.5);
-    return new THREE.TubeGeometry(c, 400, 0.018, 8, false);
+    return new THREE.TubeGeometry(c, 400, 0.015, 8, false);
   }, []);
 
   return (
     <mesh geometry={geom}>
-      <meshStandardMaterial color="#1d1d1f" roughness={0.3} metalness={0.7} />
+      <meshStandardMaterial color="#333" roughness={0.3} metalness={0.6} />
     </mesh>
   );
 }
 
-/* ──────────── NODE ──────────── */
+/* ──────────── NODE WITH LABEL ──────────── */
 
-function Node({ index, active, onHover }: { index: number; active: boolean; onHover: (i: number | null) => void }) {
-  const ref = useRef<THREE.Mesh>(null);
+function Node({
+  index,
+  active,
+  onHover,
+}: {
+  index: number;
+  active: boolean;
+  onHover: (i: number | null) => void;
+}) {
+  const sphereRef = useRef<THREE.Mesh>(null);
   const pos = helixPt(index / (N - 1));
 
   useFrame(() => {
-    if (!ref.current) return;
-    const s = active ? 0.14 : 0.05;
-    ref.current.scale.lerp(new THREE.Vector3(s, s, s), 0.12);
+    if (!sphereRef.current) return;
+    const s = active ? 0.12 : 0.045;
+    sphereRef.current.scale.lerp(new THREE.Vector3(s, s, s), 0.12);
   });
 
   return (
     <group position={pos}>
-      <mesh onPointerEnter={(e) => { e.stopPropagation(); onHover(index); }} onPointerLeave={() => onHover(null)}>
-        <sphereGeometry args={[0.4, 8, 8]} />
+      {/* Hit area */}
+      <mesh
+        onPointerOver={(e) => { e.stopPropagation(); onHover(index); }}
+        onPointerOut={() => onHover(null)}
+      >
+        <sphereGeometry args={[0.45, 8, 8]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
-      <mesh ref={ref} scale={0.05}>
+
+      {/* Sphere */}
+      <mesh ref={sphereRef} scale={0.045}>
         <sphereGeometry args={[1, 16, 16]} />
         <meshStandardMaterial
-          color={active ? "#fff" : "#aaa"}
-          emissive={active ? "#fff" : "#444"}
-          emissiveIntensity={active ? 1.8 : 0.05}
+          color={active ? "#fff" : "#888"}
+          emissive={active ? "#fff" : "#333"}
+          emissiveIntensity={active ? 2 : 0.02}
           roughness={0.2}
           metalness={0.8}
         />
       </mesh>
+
+      {/* HTML label — always visible, highlighted on hover */}
+      <Html
+        position={[0.3, 0.15, 0]}
+        style={{
+          pointerEvents: "none",
+          whiteSpace: "nowrap",
+          userSelect: "none",
+          transition: "opacity 200ms ease-out",
+        }}
+        distanceFactor={8}
+        occlude={false}
+        zIndexRange={[1, 0]}
+      >
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: active ? 600 : 400,
+            color: active ? "#1d1d1f" : "#aaa",
+            fontFamily: "inherit",
+            transition: "all 200ms ease-out",
+            display: "flex",
+            alignItems: "baseline",
+            gap: 4,
+          }}
+        >
+          <span style={{ fontSize: 9, color: active ? "#86868b" : "#ccc", fontVariantNumeric: "tabular-nums" }}>
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          {articles[index].title}
+        </span>
+      </Html>
     </group>
   );
 }
 
+/* ──────────── SCROLL BLOCKER ──────────── */
+
+function ScrollBlocker() {
+  const { gl } = useThree();
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const block = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    canvas.addEventListener("wheel", block, { passive: false });
+    return () => canvas.removeEventListener("wheel", block);
+  }, [gl]);
+
+  return null;
+}
+
 /* ──────────── SCENE ──────────── */
 
-function Scene({ active, onHover }: { active: number | null; onHover: (i: number | null) => void }) {
+function Scene({
+  active,
+  onHover,
+}: {
+  active: number | null;
+  onHover: (i: number | null) => void;
+}) {
   return (
     <>
-      <ambientLight intensity={0.25} />
-      <directionalLight position={[5, 10, 5]} intensity={0.4} />
-      <pointLight position={[-4, 8, -4]} intensity={0.2} color="#cce" />
+      <ambientLight intensity={0.35} />
+      <directionalLight position={[5, 10, 5]} intensity={0.5} />
+      <pointLight position={[-4, 8, -4]} intensity={0.2} color="#dde" />
 
-      <fog attach="fog" args={["#fbfbfd", 16, 30]} />
+      <fog attach="fog" args={["#fbfbfd", 18, 35]} />
 
       <Particles />
       <Helix />
@@ -137,15 +207,20 @@ function Scene({ active, onHover }: { active: number | null; onHover: (i: number
 
       <OrbitControls
         autoRotate
-        autoRotateSpeed={0.25}
+        autoRotateSpeed={0.2}
         enableZoom={false}
         enablePan={false}
-        enableRotate={false}
+        enableRotate={true}
+        enableDamping
+        dampingFactor={0.05}
+        rotateSpeed={0.5}
         target={[0, HELIX_H * 0.45, 0]}
       />
 
+      <ScrollBlocker />
+
       <EffectComposer>
-        <Bloom intensity={0.5} luminanceThreshold={0.85} luminanceSmoothing={0.9} mipmapBlur />
+        <Bloom intensity={0.4} luminanceThreshold={0.85} luminanceSmoothing={0.9} mipmapBlur />
       </EffectComposer>
     </>
   );
@@ -167,60 +242,34 @@ export default function LearningCurve3D() {
     <div
       style={{
         width: "100%",
-        height: "60vh",
+        height: "70vh",
+        minHeight: 500,
+        maxHeight: 700,
         position: "relative",
         marginTop: 48,
         marginBottom: 48,
-        pointerEvents: "none",
+        cursor: "grab",
       }}
+      onWheel={(e) => e.stopPropagation()}
     >
       <Canvas
-        camera={{ position: [7, 4, 7], fov: 45 }}
+        camera={{ position: [6, 4.5, 7], fov: 48 }}
         dpr={[1, 1.5]}
-        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1, alpha: true }}
-        style={{ position: "absolute", inset: 0, touchAction: "pan-y" }}
+        gl={{
+          antialias: true,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.1,
+          alpha: true,
+        }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          touchAction: "none",
+        }}
         onPointerMissed={() => setActive(null)}
-        eventPrefix="client"
       >
         <Scene active={active} onHover={handleHover} />
       </Canvas>
-
-      {/* Active article overlay */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 24,
-          left: "50%",
-          transform: `translateX(-50%) translateY(${active !== null ? 0 : 8}px)`,
-          transition: "all 250ms ease-out",
-          opacity: active !== null ? 1 : 0,
-          pointerEvents: "none",
-          zIndex: 10,
-          textAlign: "center",
-        }}
-      >
-        {active !== null && (
-          <p
-            style={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: "var(--black)",
-              margin: 0,
-              background: "rgba(251,251,253,0.85)",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              padding: "8px 20px",
-              borderRadius: 8,
-              border: "1px solid rgba(0,0,0,0.05)",
-            }}
-          >
-            <span style={{ color: "var(--lighter)", marginRight: 8, fontVariantNumeric: "tabular-nums" }}>
-              {String(active + 1).padStart(2, "0")}
-            </span>
-            {articles[active].title}
-          </p>
-        )}
-      </div>
     </div>
   );
 }
