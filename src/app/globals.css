@@ -2,13 +2,12 @@
 
 :root {
   --black: #1d1d1f;
-  --dark: #2f3437;
+  --dark: #333336;
   --mid: #6e6e73;
-  --light: #787774;
+  --light: #86868b;
   --lighter: #d2d2d7;
-  --border: #eaeaea;
-  --surface: #f9f9f8;
-  --bg: #fbfbfa;
+  --border: rgba(0, 0, 0, 0.06);
+  --bg: #ffffff;
 }
 
 body {
@@ -23,10 +22,9 @@ body {
 
 ::selection {
   background: var(--black);
-  color: var(--bg);
+  color: #fff;
 }
 
 h1, h2, h3, h4 {
   text-wrap: balance;
-  letter-spacing: -0.025em;
 }
