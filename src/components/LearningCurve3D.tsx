@@ -1,288 +1,318 @@
 "use client";
 
-import { useState, useRef, useMemo, useCallback } from "react";
-import { Canvas, useFrame, useThree, ThreeEvent } from "@react-three/fiber";
-import { OrbitControls, Text, Line, Float } from "@react-three/drei";
+import { useState, useRef, useMemo, useCallback, useEffect } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { OrbitControls, Text, Float } from "@react-three/drei";
+import {
+  EffectComposer,
+  Bloom,
+  Vignette,
+  ChromaticAberration,
+} from "@react-three/postprocessing";
+import { BlendFunction } from "postprocessing";
 import * as THREE from "three";
 
-/* ───────────────────────── DATA ───────────────────────── */
+/* ──────────────── DATA ──────────────── */
 
 const articles = [
-  { date: "1 oct. 2025", title: "Introduction", learning: "Choix du sujet, premières intuitions sur l'importance de la typographie", y: 0.05 },
-  { date: "14 oct. 2025", title: "L'origine de la typographie", learning: "Étymologie, définition, la double nature du mot", y: 0.12 },
-  { date: "27 oct. 2025", title: "L'imprimerie et la transmission", learning: "De la xylographie chinoise à Gutenberg", y: 0.22 },
-  { date: "9 nov. 2025", title: "Les premiers typographes", learning: "Jenson, Manuce, Griffo, Tory, la rupture avec le gothique", y: 0.30 },
-  { date: "22 nov. 2025", title: "Claude Garamont", learning: "Le contexte parisien des années 1530, les Grecs du Roi", y: 0.38 },
-  { date: "5 déc. 2025", title: "La standardisation", learning: "Moxon, le Romain du Roi, Fournier, Bodoni", y: 0.45 },
-  { date: "18 déc. 2025", title: "La classification typographique", learning: "Vox-ATypI, les onze familles", y: 0.55 },
-  { date: "31 déc. 2025", title: "Le dessin typographique", learning: "Anatomie des lettres, vocabulaire technique", y: 0.62 },
-  { date: "12 jan. 2026", title: "La typographie sur internet", learning: "PostScript, TrueType, OpenType, @font-face, Google Fonts", y: 0.70 },
-  { date: "23 jan. 2026", title: "Les fonderies modernes", learning: "Monotype, les indépendants, le coût de création", y: 0.76 },
-  { date: "3 fév. 2026", title: "Licences typographiques", learning: "Desktop, web, app, modèles de tarification", y: 0.80 },
-  { date: "13 fév. 2026", title: "Cocotte", learning: "Développement du logiciel en parallèle", y: 0.85 },
-  { date: "22 fév. 2026", title: "L'association de polices", learning: "Principes de contraste et de cohérence", y: 0.89 },
-  { date: "1 mars 2026", title: "Typographie et identité de marque", learning: "Polices sur-mesure, IBM Plex, Parisine", y: 0.93 },
-  { date: "8 mars 2026", title: "OpenType", learning: "Ligatures, petites capitales, chiffres elzéviriens", y: 0.96 },
-  { date: "15 mars 2026", title: "Conclusion", learning: "Bilan de l'apprentissage", y: 1.0 },
+  { date: "Oct. 2025", title: "Introduction", y: 0.05 },
+  { date: "", title: "L'origine de la typographie", y: 0.12 },
+  { date: "", title: "L'imprimerie et la transmission", y: 0.22 },
+  { date: "Nov.", title: "Les premiers typographes", y: 0.30 },
+  { date: "", title: "Claude Garamont", y: 0.38 },
+  { date: "", title: "La standardisation", y: 0.45 },
+  { date: "Déc.", title: "La classification typographique", y: 0.55 },
+  { date: "", title: "Le dessin typographique", y: 0.62 },
+  { date: "Jan. 2026", title: "La typographie sur internet", y: 0.70 },
+  { date: "", title: "Les fonderies modernes", y: 0.76 },
+  { date: "Fév.", title: "Licences typographiques", y: 0.80 },
+  { date: "", title: "Cocotte", y: 0.85 },
+  { date: "", title: "L'association de polices", y: 0.89 },
+  { date: "Mars", title: "Typographie et identité", y: 0.93 },
+  { date: "", title: "OpenType", y: 0.96 },
+  { date: "", title: "Conclusion", y: 1.0 },
 ];
 
-const SPREAD_X = 14;
-const HEIGHT = 5;
-const DEPTH = 3;
+const N = articles.length;
+const HELIX_REVS = 2.5;
+const HELIX_R = 3;
+const HELIX_H = 8;
 
-function getPoint(i: number): [number, number, number] {
-  const t = i / (articles.length - 1);
-  const x = (t - 0.5) * SPREAD_X;
-  const y = articles[i].y * HEIGHT;
-  const z = Math.sin(t * Math.PI) * DEPTH;
-  return [x, y, z];
+function helixPoint(t: number): THREE.Vector3 {
+  const angle = t * Math.PI * 2 * HELIX_REVS;
+  return new THREE.Vector3(
+    Math.cos(angle) * HELIX_R,
+    t * HELIX_H,
+    Math.sin(angle) * HELIX_R
+  );
 }
 
-/* ───────────────────── CURVE RIBBON ───────────────────── */
+/* ──────────────── AMBIENT PARTICLES ──────────────── */
 
-function CurveRibbon() {
-  const curvePoints = useMemo(() => {
-    const pts: THREE.Vector3[] = [];
-    for (let i = 0; i < articles.length; i++) {
-      pts.push(new THREE.Vector3(...getPoint(i)));
+function Particles({ count = 4000 }) {
+  const ref = useRef<THREE.Points>(null);
+
+  const positions = useMemo(() => {
+    const arr = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      arr[i * 3] = (Math.random() - 0.5) * 20;
+      arr[i * 3 + 1] = Math.random() * 12;
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 20;
     }
-    const curve = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.3);
-    return curve.getPoints(200);
-  }, []);
+    return arr;
+  }, [count]);
 
-  const linePoints = useMemo(
-    () => curvePoints.map((p) => [p.x, p.y, p.z] as [number, number, number]),
-    [curvePoints]
-  );
-
-  return (
-    <>
-      {/* Main curve */}
-      <Line
-        points={linePoints}
-        color="#1d1d1f"
-        lineWidth={2}
-        transparent
-        opacity={0.9}
-      />
-      {/* Shadow curve on ground plane */}
-      <Line
-        points={linePoints.map(([x, , z]) => [x, 0, z] as [number, number, number])}
-        color="#1d1d1f"
-        lineWidth={1}
-        transparent
-        opacity={0.06}
-      />
-      {/* Vertical drop lines from curve to ground */}
-      {articles.map((_, i) => {
-        const [x, y, z] = getPoint(i);
-        return (
-          <Line
-            key={`drop-${i}`}
-            points={[
-              [x, y, z],
-              [x, 0, z],
-            ]}
-            color="#1d1d1f"
-            lineWidth={0.5}
-            transparent
-            opacity={0.04}
-          />
-        );
-      })}
-    </>
-  );
-}
-
-/* ───────────────────── DATA POINT ───────────────────── */
-
-function DataPoint({
-  index,
-  isActive,
-  onHover,
-}: {
-  index: number;
-  isActive: boolean;
-  onHover: (i: number | null) => void;
-}) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [x, y, z] = getPoint(index);
-
-  useFrame(() => {
-    if (!meshRef.current) return;
-    const target = isActive ? 0.18 : 0.08;
-    meshRef.current.scale.lerp(
-      new THREE.Vector3(target, target, target),
-      0.15
-    );
+  useFrame(({ clock }) => {
+    if (!ref.current) return;
+    ref.current.rotation.y = clock.getElapsedTime() * 0.01;
   });
 
   return (
-    <group position={[x, y, z]}>
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          args={[positions, 3]}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.015}
+        color="#666"
+        transparent
+        opacity={0.4}
+        sizeAttenuation
+      />
+    </points>
+  );
+}
+
+/* ──────────────── HELIX TUBE ──────────────── */
+
+function HelixTube() {
+  const geom = useMemo(() => {
+    const pts: THREE.Vector3[] = [];
+    for (let i = 0; i <= 300; i++) {
+      pts.push(helixPoint(i / 300));
+    }
+    const curve = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.5);
+    return new THREE.TubeGeometry(curve, 300, 0.025, 8, false);
+  }, []);
+
+  return (
+    <mesh geometry={geom}>
+      <meshStandardMaterial
+        color="#1d1d1f"
+        roughness={0.4}
+        metalness={0.6}
+        transparent
+        opacity={0.8}
+      />
+    </mesh>
+  );
+}
+
+/* ──────────────── HELIX GLOW (thicker, emissive) ──────────────── */
+
+function HelixGlow() {
+  const geom = useMemo(() => {
+    const pts: THREE.Vector3[] = [];
+    for (let i = 0; i <= 300; i++) {
+      pts.push(helixPoint(i / 300));
+    }
+    const curve = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.5);
+    return new THREE.TubeGeometry(curve, 300, 0.06, 8, false);
+  }, []);
+
+  return (
+    <mesh geometry={geom}>
+      <meshBasicMaterial
+        color="#888"
+        transparent
+        opacity={0.08}
+      />
+    </mesh>
+  );
+}
+
+/* ──────────────── DATA NODE ──────────────── */
+
+function DataNode({
+  index,
+  active,
+  onHover,
+}: {
+  index: number;
+  active: boolean;
+  onHover: (i: number | null) => void;
+}) {
+  const ref = useRef<THREE.Group>(null);
+  const t = index / (N - 1);
+  const pos = helixPoint(t);
+
+  useFrame(() => {
+    if (!ref.current) return;
+    const s = active ? 1.4 : 1;
+    ref.current.scale.lerp(new THREE.Vector3(s, s, s), 0.1);
+  });
+
+  return (
+    <group ref={ref} position={pos}>
       {/* Hit area */}
       <mesh
-        onPointerEnter={(e: ThreeEvent<PointerEvent>) => {
-          e.stopPropagation();
-          onHover(index);
-        }}
+        onPointerEnter={(e) => { e.stopPropagation(); onHover(index); }}
         onPointerLeave={() => onHover(null)}
       >
-        <sphereGeometry args={[0.4, 8, 8]} />
+        <sphereGeometry args={[0.35, 8, 8]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Visible sphere */}
-      <mesh ref={meshRef} scale={0.08}>
-        <sphereGeometry args={[1, 16, 16]} />
+      {/* Core sphere */}
+      <mesh>
+        <sphereGeometry args={[0.06, 16, 16]} />
         <meshStandardMaterial
-          color={isActive ? "#1d1d1f" : "#86868b"}
-          roughness={0.3}
-          metalness={0.1}
+          color={active ? "#fff" : "#999"}
+          emissive={active ? "#fff" : "#333"}
+          emissiveIntensity={active ? 2 : 0.1}
+          roughness={0.2}
+          metalness={0.8}
         />
       </mesh>
 
-      {/* Ring on active */}
-      {isActive && (
+      {/* Outer ring on hover */}
+      {active && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.22, 0.26, 32]} />
-          <meshBasicMaterial
-            color="#1d1d1f"
-            transparent
-            opacity={0.15}
-            side={THREE.DoubleSide}
-          />
+          <ringGeometry args={[0.14, 0.16, 32]} />
+          <meshBasicMaterial color="#fff" transparent opacity={0.3} side={THREE.DoubleSide} />
         </mesh>
       )}
-
-      {/* Number label */}
-      <Text
-        position={[0, -0.35, 0]}
-        fontSize={0.15}
-        color={isActive ? "#1d1d1f" : "#d2d2d7"}
-        anchorX="center"
-        anchorY="top"
-        font="/fonts/inter-medium.woff"
-      >
-        {String(index + 1).padStart(2, "0")}
-      </Text>
     </group>
   );
 }
 
-/* ───────────────────── FLOATING LABEL ───────────────────── */
+/* ──────────────── FLOATING LABEL (always faces camera) ──────────────── */
 
 function ActiveLabel({ index }: { index: number }) {
-  const [x, y, z] = getPoint(index);
-  const { camera } = useThree();
+  const t = index / (N - 1);
+  const pos = helixPoint(t);
   const groupRef = useRef<THREE.Group>(null);
 
-  useFrame(() => {
+  useFrame(({ camera }) => {
     if (groupRef.current) {
       groupRef.current.quaternion.copy(camera.quaternion);
     }
   });
 
   return (
-    <group position={[x, y + 0.55, z]} ref={groupRef}>
-      <Text
-        fontSize={0.2}
-        color="#1d1d1f"
-        anchorX="center"
-        anchorY="bottom"
-        maxWidth={3}
-        textAlign="center"
-        font="/fonts/inter-medium.woff"
-      >
-        {articles[index].title}
-      </Text>
-    </group>
+    <Float speed={3} rotationIntensity={0} floatIntensity={0.15}>
+      <group ref={groupRef} position={[pos.x, pos.y + 0.45, pos.z]}>
+        <Text
+          fontSize={0.18}
+          color="#fff"
+          anchorX="center"
+          anchorY="bottom"
+          maxWidth={3}
+          textAlign="center"
+          font="/fonts/inter-medium.woff"
+          outlineWidth={0.01}
+          outlineColor="#000"
+        >
+          {articles[index].title}
+        </Text>
+        {articles[index].date && (
+          <Text
+            fontSize={0.1}
+            color="#888"
+            anchorX="center"
+            anchorY="top"
+            position={[0, -0.08, 0]}
+            font="/fonts/inter-medium.woff"
+          >
+            {articles[index].date}
+          </Text>
+        )}
+      </group>
+    </Float>
   );
 }
 
-/* ───────────────────── GROUND GRID ───────────────────── */
+/* ──────────────── VERTICAL DROPLINES ──────────────── */
 
-function Ground() {
-  return (
-    <group position={[0, -0.01, 0]}>
-      <gridHelper
-        args={[20, 20, "#e8e8ed", "#e8e8ed"]}
-        rotation={[0, 0, 0]}
-      />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
-        <planeGeometry args={[30, 30]} />
-        <meshStandardMaterial
-          color="#fbfbfd"
-          transparent
-          opacity={0.8}
-        />
-      </mesh>
-    </group>
-  );
-}
-
-/* ───────────────────── MONTH MARKERS ───────────────────── */
-
-function MonthMarkers() {
-  const monthLabels = [
-    { label: "Oct.", idx: 0 },
-    { label: "Nov.", idx: 3 },
-    { label: "Déc.", idx: 6 },
-    { label: "Jan.", idx: 8 },
-    { label: "Fév.", idx: 10 },
-    { label: "Mars", idx: 13 },
-  ];
+function DropLines() {
+  const lines = useMemo(() => {
+    return articles.map((_, i) => {
+      const t = i / (N - 1);
+      const p = helixPoint(t);
+      return [
+        new THREE.Vector3(p.x, p.y, p.z),
+        new THREE.Vector3(p.x, 0, p.z),
+      ];
+    });
+  }, []);
 
   return (
     <>
-      {monthLabels.map((m) => {
-        const [x, , z] = getPoint(m.idx);
-        return (
-          <Text
-            key={m.label}
-            position={[x, 0.02, z + 0.8]}
-            fontSize={0.2}
-            color="#86868b"
-            anchorX="center"
-            anchorY="middle"
-            rotation={[-Math.PI / 2, 0, 0]}
-            font="/fonts/inter-medium.woff"
-          >
-            {m.label}
-          </Text>
-        );
-      })}
+      {lines.map((pts, i) => (
+        <line key={i}>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              args={[new Float32Array([
+                pts[0].x, pts[0].y, pts[0].z,
+                pts[1].x, pts[1].y, pts[1].z,
+              ]), 3]}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial color="#555" transparent opacity={0.06} />
+        </line>
+      ))}
     </>
   );
 }
 
-/* ───────────────────── GENTLE AUTO-ROTATE ───────────────────── */
+/* ──────────────── GROUND ──────────────── */
 
-function AutoRotate({ enabled }: { enabled: boolean }) {
-  const controlsRef = useRef<React.ComponentRef<typeof OrbitControls>>(null);
+function Ground() {
+  return (
+    <>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
+        <circleGeometry args={[12, 64]} />
+        <meshStandardMaterial
+          color="#111"
+          roughness={1}
+          metalness={0}
+          transparent
+          opacity={0.3}
+        />
+      </mesh>
+      <gridHelper
+        args={[24, 24, "#222", "#1a1a1a"]}
+        position={[0, 0, 0]}
+      />
+    </>
+  );
+}
 
-  useFrame(() => {
-    if (controlsRef.current && enabled) {
-      controlsRef.current.autoRotateSpeed = 0.3;
-    }
-  });
+/* ──────────────── CAMERA RIG ──────────────── */
 
+function CameraRig({ active }: { active: number | null }) {
   return (
     <OrbitControls
-      ref={controlsRef}
-      autoRotate={enabled}
-      autoRotateSpeed={0.3}
-      enableZoom={true}
+      autoRotate={active === null}
+      autoRotateSpeed={0.4}
+      enableZoom
       enablePan={false}
       minDistance={5}
-      maxDistance={20}
-      maxPolarAngle={Math.PI / 2.1}
+      maxDistance={18}
+      maxPolarAngle={Math.PI / 2}
       minPolarAngle={0.3}
-      target={[0, 2, 0]}
+      target={[0, HELIX_H * 0.45, 0]}
+      dampingFactor={0.05}
+      enableDamping
     />
   );
 }
 
-/* ───────────────────── SCENE ───────────────────── */
+/* ──────────────── SCENE ──────────────── */
 
 function Scene({
   active,
@@ -293,109 +323,165 @@ function Scene({
 }) {
   return (
     <>
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[8, 12, 5]} intensity={0.6} />
+      {/* Lighting */}
+      <ambientLight intensity={0.3} />
+      <directionalLight position={[5, 10, 5]} intensity={0.5} color="#fff" />
+      <pointLight position={[-5, 8, -3]} intensity={0.3} color="#aac" />
+
+      {/* Environment */}
+      <color attach="background" args={["#0a0a0a"]} />
+      <fog attach="fog" args={["#0a0a0a", 12, 25]} />
 
       <Ground />
-      <CurveRibbon />
-      <MonthMarkers />
+      <Particles />
+      <HelixTube />
+      <HelixGlow />
+      <DropLines />
 
       {articles.map((_, i) => (
-        <DataPoint
-          key={i}
-          index={i}
-          isActive={active === i}
-          onHover={onHover}
-        />
+        <DataNode key={i} index={i} active={active === i} onHover={onHover} />
       ))}
 
-      {active !== null && (
-        <Float speed={2} rotationIntensity={0} floatIntensity={0.3}>
-          <ActiveLabel index={active} />
-        </Float>
-      )}
+      {active !== null && <ActiveLabel index={active} />}
 
-      <AutoRotate enabled={active === null} />
-      <fog attach="fog" args={["#fbfbfd", 15, 30]} />
+      <CameraRig active={active} />
+
+      {/* Post-processing */}
+      <EffectComposer>
+        <Bloom
+          intensity={1.2}
+          luminanceThreshold={0.6}
+          luminanceSmoothing={0.9}
+          mipmapBlur
+        />
+        <Vignette
+          offset={0.3}
+          darkness={0.7}
+          blendFunction={BlendFunction.NORMAL}
+        />
+        <ChromaticAberration
+          offset={new THREE.Vector2(0.001, 0.001)}
+          blendFunction={BlendFunction.NORMAL}
+          radialModulation={false}
+          modulationOffset={0}
+        />
+      </EffectComposer>
     </>
   );
 }
 
-/* ───────────────────── MAIN COMPONENT ───────────────────── */
+/* ──────────────── MAIN ──────────────── */
 
 export default function LearningCurve3D() {
   const [active, setActive] = useState<number | null>(null);
+  const [ready, setReady] = useState(false);
 
-  const handleHover = useCallback((i: number | null) => {
-    setActive(i);
+  useEffect(() => {
+    setReady(true);
   }, []);
 
+  const handleHover = useCallback((i: number | null) => setActive(i), []);
+
+  if (!ready) return null;
+
   return (
-    <div className="w-screen h-screen relative left-1/2 -translate-x-1/2 flex flex-col bg-[var(--bg)]">
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 50,
+        background: "#0a0a0a",
+      }}
+    >
+      {/* Canvas */}
+      <Canvas
+        camera={{ position: [6, 5, 8], fov: 50 }}
+        dpr={[1, 2]}
+        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }}
+        style={{ position: "absolute", inset: 0 }}
+        onPointerMissed={() => setActive(null)}
+      >
+        <Scene active={active} onHover={handleHover} />
+      </Canvas>
 
-      {/* Top bar */}
-      <div className="flex items-baseline justify-between px-8 pt-6 pb-2 z-10">
-        <div>
-          <h3 className="text-xl font-semibold text-[var(--black)] tracking-tight">
-            Courbe d&apos;apprentissage
-          </h3>
-          <p className="text-[13px] text-[var(--light)] mt-0.5">
-            16 articles &middot; Oct. 2025 — Mars 2026
+      {/* Overlay: title */}
+      <div style={{ position: "absolute", top: 32, left: 32, zIndex: 10 }}>
+        <h3 style={{ fontSize: 20, fontWeight: 600, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>
+          Courbe d&apos;apprentissage
+        </h3>
+        <p style={{ fontSize: 13, color: "#666", marginTop: 4 }}>
+          16 articles &middot; Oct. 2025 — Mars 2026
+        </p>
+      </div>
+
+      {/* Overlay: article counter */}
+      {active !== null && (
+        <div style={{ position: "absolute", top: 32, right: 32, zIndex: 10, textAlign: "right" }}>
+          <p style={{ fontSize: 11, color: "#555", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+            {String(active + 1).padStart(2, "0")}/{N}
           </p>
         </div>
-      </div>
+      )}
 
-      {/* 3D Canvas */}
-      <div className="flex-1 min-h-0">
-        <Canvas
-          camera={{ position: [0, 5, 12], fov: 45 }}
-          dpr={[1, 2]}
-          style={{ background: "transparent" }}
-          onPointerMissed={() => setActive(null)}
-        >
-          <Scene active={active} onHover={handleHover} />
-        </Canvas>
-      </div>
-
-      {/* Bottom detail card */}
-      <div className="px-8 pb-6 z-10">
-        <div
-          className="max-w-[600px] mx-auto rounded-xl"
-          style={{
-            transition: "all 300ms ease-out",
-            backgroundColor: active !== null ? "#f5f5f7" : "transparent",
-            padding: "16px 20px",
-            opacity: active !== null ? 1 : 0,
-            transform: active !== null ? "translateY(0)" : "translateY(8px)",
-          }}
-        >
-          {active !== null && (
-            <div className="flex items-start gap-4">
-              <span className="text-2xl font-semibold text-[var(--lighter)] tabular-nums leading-none mt-0.5">
-                {String(active + 1).padStart(2, "0")}
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="text-[15px] font-semibold text-[var(--black)] leading-snug">
-                    {articles[active].title}
-                  </p>
-                  <p className="text-xs text-[var(--light)] tabular-nums shrink-0">
-                    {articles[active].date}
-                  </p>
-                </div>
-                <p className="text-[13px] text-[var(--mid)] leading-relaxed mt-1">
-                  {articles[active].learning}
+      {/* Overlay: detail card */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 32,
+          left: "50%",
+          transform: `translateX(-50%) translateY(${active !== null ? 0 : 12}px)`,
+          transition: "all 300ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+          opacity: active !== null ? 1 : 0,
+          zIndex: 10,
+          width: "100%",
+          maxWidth: 480,
+          padding: "0 24px",
+          pointerEvents: "none",
+        }}
+      >
+        {active !== null && (
+          <div
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.08)",
+              padding: "16px 20px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: "#fff", margin: 0, lineHeight: 1.3 }}>
+                {articles[active].title}
+              </p>
+              {articles[active].date && (
+                <p style={{ fontSize: 11, color: "#666", margin: 0, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
+                  {articles[active].date}
                 </p>
-              </div>
+              )}
             </div>
-          )}
-        </div>
-        {active === null && (
-          <p className="text-center text-xs text-[var(--lighter)]">
-            Survolez les points ou faites tourner la vue
-          </p>
+          </div>
         )}
       </div>
+
+      {/* Hint */}
+      {active === null && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 32,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 10,
+          }}
+        >
+          <p style={{ fontSize: 12, color: "#444", margin: 0 }}>
+            Survolez les points &middot; Glissez pour tourner
+          </p>
+        </div>
+      )}
     </div>
   );
 }
