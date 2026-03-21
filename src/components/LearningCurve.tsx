@@ -6,7 +6,8 @@ const data = [
   {
     date: "1 oct. 2025",
     title: "Introduction",
-    learning: "Choix du sujet, premières intuitions sur l'importance de la typographie",
+    learning:
+      "Choix du sujet, premières intuitions sur l'importance de la typographie",
     y: 5,
   },
   {
@@ -18,7 +19,8 @@ const data = [
   {
     date: "27 oct. 2025",
     title: "L'imprimerie et la transmission",
-    learning: "De la xylographie chinoise à Gutenberg, comprendre que la typographie est le véhicule du contenu",
+    learning:
+      "De la xylographie chinoise à Gutenberg, comprendre que la typographie est le véhicule du contenu",
     y: 22,
   },
   {
@@ -30,49 +32,57 @@ const data = [
   {
     date: "22 nov. 2025",
     title: "Claude Garamont",
-    learning: "Le contexte parisien des années 1530, Vervliet, les Grecs du Roi",
+    learning:
+      "Le contexte parisien des années 1530, Vervliet, les Grecs du Roi",
     y: 38,
   },
   {
     date: "5 déc. 2025",
     title: "La standardisation",
-    learning: "Moxon, le Romain du Roi, Fournier, Bodoni, la typographie comme enjeu de pouvoir",
+    learning:
+      "Moxon, le Romain du Roi, Fournier, Bodoni, la typographie comme enjeu de pouvoir",
     y: 45,
   },
   {
     date: "18 déc. 2025",
     title: "La classification typographique",
-    learning: "Vox-ATypI, les onze familles, chaque police porte une histoire",
+    learning:
+      "Vox-ATypI, les onze familles, chaque police porte une histoire",
     y: 55,
   },
   {
     date: "31 déc. 2025",
     title: "Le dessin typographique",
-    learning: "Anatomie des lettres, vocabulaire technique, familles typographiques",
+    learning:
+      "Anatomie des lettres, vocabulaire technique, familles typographiques",
     y: 62,
   },
   {
     date: "12 jan. 2026",
     title: "La typographie sur internet",
-    learning: "PostScript, TrueType, OpenType, @font-face, Google Fonts, polices variables",
+    learning:
+      "PostScript, TrueType, OpenType, @font-face, Google Fonts, polices variables",
     y: 70,
   },
   {
     date: "23 jan. 2026",
     title: "Les fonderies modernes",
-    learning: "Le marché, Monotype, les indépendants, le coût de création d'une police",
+    learning:
+      "Le marché, Monotype, les indépendants, le coût de création d'une police",
     y: 76,
   },
   {
     date: "3 fév. 2026",
     title: "Licences typographiques",
-    learning: "Desktop, web, app, les modèles de tarification, la protection juridique",
+    learning:
+      "Desktop, web, app, les modèles de tarification, la protection juridique",
     y: 80,
   },
   {
     date: "13 fév. 2026",
     title: "Cocotte",
-    learning: "Présentation du logiciel développé en parallèle de l'apprentissage",
+    learning:
+      "Présentation du logiciel développé en parallèle de l'apprentissage",
     y: 85,
   },
   {
@@ -84,19 +94,22 @@ const data = [
   {
     date: "1 mars 2026",
     title: "Typographie et identité de marque",
-    learning: "Polices sur-mesure, IBM Plex, Parisine, le rôle stratégique de la typographie",
+    learning:
+      "Polices sur-mesure, IBM Plex, Parisine, le rôle stratégique de la typographie",
     y: 93,
   },
   {
     date: "8 mars 2026",
     title: "OpenType et fonctionnalités avancées",
-    learning: "Ligatures, petites capitales, chiffres elzéviriens, variantes stylistiques",
+    learning:
+      "Ligatures, petites capitales, chiffres elzéviriens, variantes stylistiques",
     y: 96,
   },
   {
     date: "15 mars 2026",
     title: "Conclusion",
-    learning: "Bilan de l'apprentissage, ce que la typographie a changé dans ma manière de voir",
+    learning:
+      "Bilan de l'apprentissage, ce que la typographie a changé dans ma manière de voir",
     y: 100,
   },
 ];
@@ -104,191 +117,103 @@ const data = [
 export default function LearningCurve() {
   const [active, setActive] = useState<number | null>(null);
 
-  const width = 900;
-  const height = 300;
-  const padX = 40;
-  const padTop = 20;
-  const padBottom = 40;
-
-  const chartW = width - padX * 2;
-  const chartH = height - padTop - padBottom;
-
-  const points = data.map((d, i) => ({
-    ...d,
-    x: padX + (i / (data.length - 1)) * chartW,
-    cy: padTop + chartH - (d.y / 100) * chartH,
-  }));
-
-  const pathD = points.reduce((acc, p, i) => {
-    if (i === 0) return `M ${p.x} ${p.cy}`;
-    const prev = points[i - 1];
-    const cpx1 = prev.x + (p.x - prev.x) * 0.4;
-    const cpx2 = prev.x + (p.x - prev.x) * 0.6;
-    return `${acc} C ${cpx1} ${prev.cy}, ${cpx2} ${p.cy}, ${p.x} ${p.cy}`;
-  }, "");
-
-  const areaD = `${pathD} L ${points[points.length - 1].x} ${padTop + chartH} L ${points[0].x} ${padTop + chartH} Z`;
-
   return (
-    <div className="w-full py-16">
-      <h3 className="text-lg font-semibold text-[var(--black)] tracking-tight text-center mb-2">
+    <div className="w-full py-12">
+      <h3 className="text-xl font-semibold text-[var(--black)] tracking-tight text-center mb-1">
         Courbe d&apos;apprentissage
       </h3>
       <p className="text-sm text-[var(--light)] text-center mb-10">
         Octobre 2025 &mdash; Mars 2026
       </p>
 
-      <div className="w-full overflow-x-auto">
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          className="w-full min-w-[600px] h-auto"
-          role="img"
-          aria-label="Courbe d'apprentissage typographique d'octobre 2025 à mars 2026"
-        >
-          {/* Grid lines */}
-          {[0, 25, 50, 75, 100].map((v) => {
-            const y = padTop + chartH - (v / 100) * chartH;
-            return (
-              <line
-                key={v}
-                x1={padX}
-                y1={y}
-                x2={width - padX}
-                y2={y}
-                stroke="var(--lighter)"
-                strokeWidth={0.5}
-              />
-            );
-          })}
+      {/* Timeline list */}
+      <div className="space-y-0">
+        {data.map((item, i) => {
+          const isActive = active === i;
+          const progress = item.y;
 
-          {/* Area fill */}
-          <path
-            d={areaD}
-            fill="var(--dark)"
-            opacity={0.04}
-          />
-
-          {/* Curve */}
-          <path
-            d={pathD}
-            fill="none"
-            stroke="var(--dark)"
-            strokeWidth={1.5}
-            strokeLinecap="round"
-          />
-
-          {/* Vertical indicator line for active point */}
-          {active !== null && (
-            <line
-              x1={points[active].x}
-              y1={points[active].cy}
-              x2={points[active].x}
-              y2={padTop + chartH}
-              stroke="var(--dark)"
-              strokeWidth={0.5}
-              strokeDasharray="3 3"
-              opacity={0.4}
-            />
-          )}
-
-          {/* Points + hit areas */}
-          {points.map((p, i) => (
-            <g
+          return (
+            <button
               key={i}
-              onClick={() => setActive(active === i ? null : i)}
+              onClick={() => setActive(isActive ? null : i)}
               onMouseEnter={() => setActive(i)}
-              className="cursor-pointer"
-              role="button"
-              tabIndex={0}
-              aria-label={`${data[i].title} — ${data[i].date}`}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setActive(active === i ? null : i);
-                }
+              onMouseLeave={() => setActive(null)}
+              className="w-full text-left group"
+              style={{
+                /* ux-fitts-target-size: min 44px touch target */
+                minHeight: 44,
               }}
             >
-              {/* Invisible hit area — generous for touch */}
-              <circle
-                cx={p.x}
-                cy={p.cy}
-                r={22}
-                fill="transparent"
-              />
-              {/* Outer ring on active */}
-              {active === i && (
-                <circle
-                  cx={p.x}
-                  cy={p.cy}
-                  r={8}
-                  fill="none"
-                  stroke="var(--dark)"
-                  strokeWidth={1}
-                  opacity={0.25}
-                />
-              )}
-              {/* Visible dot */}
-              <circle
-                cx={p.x}
-                cy={p.cy}
-                r={active === i ? 4 : 2.5}
-                fill={active === i ? "var(--black)" : "var(--dark)"}
-                className="transition-all duration-150"
-              />
-            </g>
-          ))}
-
-          {/* Date labels — first, last, and every 4th */}
-          {points.map((p, i) => {
-            if (i !== 0 && i !== points.length - 1 && i % 4 !== 0) return null;
-            return (
-              <text
-                key={`label-${i}`}
-                x={p.x}
-                y={height - 8}
-                textAnchor="middle"
-                className="text-[9px] fill-[var(--light)]"
-                style={{ userSelect: "none" }}
+              <div
+                className="flex items-center gap-4 px-4 py-3 rounded-lg transition-colors"
+                style={{
+                  /* duration-small-state: 200ms for state changes */
+                  transitionDuration: "200ms",
+                  /* easing-entrance-ease-out */
+                  transitionTimingFunction: "ease-out",
+                  background: isActive ? "var(--card-bg, #f5f5f7)" : "transparent",
+                }}
               >
-                {p.date}
-              </text>
-            );
-          })}
-        </svg>
-      </div>
+                {/* Number */}
+                <span
+                  className="text-xs font-semibold tabular-nums shrink-0 w-6 text-right transition-colors"
+                  style={{
+                    transitionDuration: "200ms",
+                    color: isActive ? "var(--black)" : "var(--lighter)",
+                  }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
 
-      {/* Detail panel below chart */}
-      <div
-        className="mt-6 mx-auto overflow-hidden transition-all duration-300 ease-out"
-        style={{
-          maxWidth: 560,
-          maxHeight: active !== null ? 120 : 0,
-          opacity: active !== null ? 1 : 0,
-        }}
-      >
-        {active !== null && (
-          <div className="border-t border-[var(--lighter)] pt-4 px-1">
-            <div className="flex items-baseline justify-between gap-4">
-              <p className="text-sm font-semibold text-[var(--black)] leading-snug">
-                {data[active].title}
-              </p>
-              <p className="text-xs text-[var(--light)] whitespace-nowrap shrink-0">
-                {data[active].date}
-              </p>
-            </div>
-            <p className="text-sm text-[var(--mid)] leading-relaxed mt-1">
-              {data[active].learning}
-            </p>
-          </div>
-        )}
-      </div>
+                {/* Progress bar */}
+                <div className="w-16 h-1 rounded-full bg-[#e8e8ed] shrink-0 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${progress}%`,
+                      transitionDuration: "300ms",
+                      transitionTimingFunction: "ease-out",
+                      background: isActive ? "var(--black)" : "var(--light)",
+                    }}
+                  />
+                </div>
 
-      {/* Hint */}
-      {active === null && (
-        <p className="text-xs text-[var(--lighter)] text-center mt-4 transition-opacity duration-300">
-          Cliquez sur un point pour voir le d&eacute;tail
-        </p>
-      )}
+                {/* Title */}
+                <span
+                  className="text-[14px] font-medium flex-1 transition-colors truncate"
+                  style={{
+                    transitionDuration: "200ms",
+                    color: isActive ? "var(--black)" : "var(--dark)",
+                  }}
+                >
+                  {item.title}
+                </span>
+
+                {/* Date */}
+                <span className="text-xs text-[var(--light)] tabular-nums shrink-0 hidden sm:block">
+                  {item.date}
+                </span>
+              </div>
+
+              {/* Expandable detail — progressive disclosure */}
+              <div
+                className="overflow-hidden transition-all"
+                style={{
+                  /* easing-entrance-ease-out for reveal */
+                  transitionDuration: "250ms",
+                  transitionTimingFunction: "ease-out",
+                  maxHeight: isActive ? 60 : 0,
+                  opacity: isActive ? 1 : 0,
+                }}
+              >
+                <p className="text-[13px] text-[var(--mid)] leading-relaxed pl-[104px] pr-4 pb-3">
+                  {item.learning}
+                </p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
