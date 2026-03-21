@@ -52,43 +52,43 @@ const data = [
     y: 62,
   },
   {
-    date: "13 jan. 2026",
+    date: "12 jan. 2026",
     title: "La typographie sur internet",
     learning: "PostScript, TrueType, OpenType, @font-face, Google Fonts, polices variables",
     y: 70,
   },
   {
-    date: "26 jan. 2026",
+    date: "23 jan. 2026",
     title: "Les fonderies modernes",
     learning: "Le marché, Monotype, les indépendants, le coût de création d'une police",
     y: 76,
   },
   {
-    date: "8 fév. 2026",
+    date: "3 fév. 2026",
     title: "Licences typographiques",
     learning: "Desktop, web, app, les modèles de tarification, la protection juridique",
     y: 80,
   },
   {
-    date: "21 fév. 2026",
+    date: "13 fév. 2026",
     title: "Cocotte",
     learning: "Présentation du logiciel développé en parallèle de l'apprentissage",
     y: 85,
   },
   {
-    date: "6 mars 2026",
+    date: "22 fév. 2026",
     title: "L'association de polices",
     learning: "Principes de contraste et de cohérence, erreurs courantes",
     y: 89,
   },
   {
-    date: "8 mars 2026",
+    date: "1 mars 2026",
     title: "Typographie et identité de marque",
     learning: "Polices sur-mesure, IBM Plex, Parisine, le rôle stratégique de la typographie",
     y: 93,
   },
   {
-    date: "12 mars 2026",
+    date: "8 mars 2026",
     title: "OpenType et fonctionnalités avancées",
     learning: "Ligatures, petites capitales, chiffres elzéviriens, variantes stylistiques",
     y: 96,
@@ -135,7 +135,7 @@ export default function LearningCurve() {
         Courbe d&apos;apprentissage
       </h3>
       <p className="text-sm text-[var(--light)] text-center mb-10">
-        Octobre 2025 &mdash; 15 mars 2026
+        Octobre 2025 &mdash; Mars 2026
       </p>
 
       <div className="w-full overflow-x-auto">
