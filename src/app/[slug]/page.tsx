@@ -103,21 +103,21 @@ export default async function ArticlePage({
       <div className="pt-32 pb-12 md:pt-40 md:pb-16">
         <Link
           href="/"
-          className="inline-block text-[13px] text-[var(--light)] font-medium hover:text-[var(--black)] transition-colors duration-200 mb-12"
+          className="inline-block text-[12px] text-[var(--light)] font-mono hover:text-[var(--black)] transition-colors duration-200 mb-12"
         >
           &larr; Retour
         </Link>
 
-        <div className="flex items-baseline gap-4 mb-4">
-          <span className="text-[11px] text-[var(--lighter)] font-semibold tabular-nums">
+        <div className="flex items-baseline gap-3 mb-4">
+          <span className="text-[11px] text-[var(--lighter)] font-medium font-mono">
             {String(article.order).padStart(2, "0")}
           </span>
-          <span className="text-[13px] text-[var(--light)] font-medium">
+          <span className="text-[12px] text-[var(--light)] font-mono">
             {formatDate(article.date)}
           </span>
         </div>
 
-        <h1 className="text-3xl md:text-[2.5rem] font-semibold text-[var(--black)] leading-[1.1]">
+        <h1 className="text-[1.75rem] md:text-[2rem] font-semibold text-[var(--black)] leading-[1.15] tracking-tight">
           {article.title}
         </h1>
       </div>
@@ -138,7 +138,7 @@ export default async function ArticlePage({
             href={`/${adjacent.prev.slug}`}
             className="group flex flex-col gap-1 min-h-[44px] justify-center"
           >
-            <span className="text-[11px] text-[var(--lighter)] font-medium">
+            <span className="text-[10px] text-[var(--lighter)] font-mono">
               Pr&eacute;c&eacute;dent
             </span>
             <span className="text-[14px] text-[var(--light)] font-medium group-hover:text-[var(--black)] transition-colors duration-200">
@@ -153,7 +153,7 @@ export default async function ArticlePage({
             href={`/${adjacent.next.slug}`}
             className="group flex flex-col gap-1 text-right min-h-[44px] justify-center"
           >
-            <span className="text-[11px] text-[var(--lighter)] font-medium">
+            <span className="text-[10px] text-[var(--lighter)] font-mono">
               Suivant
             </span>
             <span className="text-[14px] text-[var(--light)] font-medium group-hover:text-[var(--black)] transition-colors duration-200">

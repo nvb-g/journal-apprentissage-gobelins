@@ -22,7 +22,7 @@ export default async function Home() {
   return (
     <div className="max-w-[640px] mx-auto px-6 min-h-[100dvh] flex flex-col">
       <header className="pt-24 pb-16">
-        <p className="text-[13px] text-[var(--light)] mb-4">
+        <p className="text-[11px] text-[var(--light)] font-mono mb-4">
           Mastère ECNI, Gobelins 2026
         </p>
         <h1 className="text-[2rem] font-semibold text-[var(--black)] leading-[1.15] tracking-tight">
@@ -37,7 +37,7 @@ export default async function Home() {
               href={settings.softwareLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[13px] text-[var(--black)] font-medium hover:opacity-60 transition-opacity duration-200"
+              className="text-[12px] text-[var(--dark)] font-mono hover:text-[var(--black)] transition-colors duration-200"
             >
               Cocotte &#8599;
             </a>
@@ -45,7 +45,7 @@ export default async function Home() {
           <span className="text-[var(--lighter)]">·</span>
           <Link
             href="/sommaire"
-            className="text-[13px] text-[var(--light)] hover:text-[var(--black)] transition-colors duration-200"
+            className="text-[12px] text-[var(--light)] font-mono hover:text-[var(--black)] transition-colors duration-200"
           >
             Sommaire
           </Link>
@@ -69,10 +69,10 @@ export default async function Home() {
                   href={`/${article.slug}`}
                   className="group flex items-baseline gap-4 py-3 border-b border-[var(--border)]"
                 >
-                  <span className="text-[11px] text-[var(--lighter)] font-medium tabular-nums shrink-0 w-5 text-right">
+                  <span className="text-[10px] text-[var(--lighter)] font-mono shrink-0 w-5 text-right">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="text-[13px] text-[var(--light)] tabular-nums shrink-0 w-[70px]">
+                  <span className="text-[11px] text-[var(--light)] font-mono shrink-0 w-[60px]">
                     {formatDateShort(article.date)}
                   </span>
                   <span className="text-[15px] font-medium text-[var(--dark)] group-hover:text-[var(--black)] transition-colors duration-200">
