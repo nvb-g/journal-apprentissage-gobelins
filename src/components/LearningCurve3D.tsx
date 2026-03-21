@@ -2,13 +2,11 @@
 
 import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Float } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import {
   EffectComposer,
   Bloom,
-  Vignette,
 } from "@react-three/postprocessing";
-import { BlendFunction } from "postprocessing";
 import * as THREE from "three";
 
 /* ──────────── DATA ──────────── */
@@ -128,8 +126,7 @@ function Scene({ active, onHover }: { active: number | null; onHover: (i: number
       <directionalLight position={[5, 10, 5]} intensity={0.4} />
       <pointLight position={[-4, 8, -4]} intensity={0.2} color="#cce" />
 
-      <color attach="background" args={["#fbfbfd"]} />
-      <fog attach="fog" args={["#fbfbfd", 14, 28]} />
+      <fog attach="fog" args={["#fbfbfd", 16, 30]} />
 
       <Particles />
       <Helix />
@@ -148,8 +145,7 @@ function Scene({ active, onHover }: { active: number | null; onHover: (i: number
       />
 
       <EffectComposer>
-        <Bloom intensity={0.6} luminanceThreshold={0.8} luminanceSmoothing={0.9} mipmapBlur />
-        <Vignette offset={0.35} darkness={0.4} blendFunction={BlendFunction.NORMAL} />
+        <Bloom intensity={0.5} luminanceThreshold={0.85} luminanceSmoothing={0.9} mipmapBlur />
       </EffectComposer>
     </>
   );
@@ -171,20 +167,20 @@ export default function LearningCurve3D() {
     <div
       style={{
         width: "100%",
-        height: "70vh",
+        height: "60vh",
         position: "relative",
-        marginTop: 40,
-        marginBottom: 40,
-        overflow: "hidden",
-        borderRadius: 16,
+        marginTop: 48,
+        marginBottom: 48,
+        pointerEvents: "none",
       }}
     >
       <Canvas
         camera={{ position: [7, 4, 7], fov: 45 }}
         dpr={[1, 1.5]}
-        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
-        style={{ position: "absolute", inset: 0 }}
+        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1, alpha: true }}
+        style={{ position: "absolute", inset: 0, touchAction: "pan-y" }}
         onPointerMissed={() => setActive(null)}
+        eventPrefix="client"
       >
         <Scene active={active} onHover={handleHover} />
       </Canvas>
