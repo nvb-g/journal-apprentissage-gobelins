@@ -32,8 +32,8 @@ export default function LearningCurve() {
 
   const w = 680;
   const h = 280;
-  const mx = 0;
-  const mt = 24;
+  const mx = 50;
+  const mt = 30;
   const mb = 24;
   const cw = w - mx * 2;
   const ch = h - mt - mb;
@@ -124,12 +124,15 @@ export default function LearningCurve() {
         {/* Label on active point */}
         {active !== null && (() => {
           const p = pts[active];
-          const above = p.y > mt + 28;
+          const above = p.y > mt + 30;
+          let anchor: "start" | "middle" | "end" = "middle";
+          if (p.x < mx + 60) anchor = "start";
+          if (p.x > w - mx - 60) anchor = "end";
           return (
             <text
               x={p.x}
               y={above ? p.y - 14 : p.y + 22}
-              textAnchor="middle"
+              textAnchor={anchor}
               fill="var(--dark)"
               fontSize={11}
               fontWeight={500}
